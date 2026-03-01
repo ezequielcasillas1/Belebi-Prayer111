@@ -1,3 +1,294 @@
 ---
 alwaysApply: true
 ---
+📱 COMPLETE TECH STACK GUIDE FOR CURSOR AI
+🎯 PROJECT: Belebi Prayer - React Native Mobile App
+TECH STACK OVERVIEW
+This is a React Native mobile app built with the following stack:
+
+Core Technologies:
+✅ Expo SDK - Managed React Native framework
+✅ Expo Dev Client - Custom development build (NOT Expo Go)
+✅ NativeWind v4 - Tailwind CSS for React Native
+✅ React Navigation - Navigation library
+✅ TypeScript - Type safety
+✅ Lucide React Native - Icon library
+WHY THIS STACK?
+1. Expo + Expo Dev Client (NOT Expo Go)
+Expo Go = Limited, can't use custom native modules
+Expo Dev Client = Full power of React Native + Expo's developer experience
+Allows use of ANY native library while keeping Expo's benefits
+Fast Refresh, OTA updates, easy builds
+2. NativeWind v4
+Tailwind CSS syntax for React Native
+Write className just like web (converts to StyleSheet automatically)
+Preserves all your existing color palette and design system
+Syntax: className="bg-[#fdfcfb] p-4 rounded-xl"
+3. React Navigation
+Industry standard for RN navigation
+Stack, Drawer, and Tab navigators
+Deep linking support
+INSTALLATION COMMANDS
+Step 1: Create Expo Project
+npx create-expo-app@latest belebi-prayer-mobile --template blank-typescript
+cd belebi-prayer-mobile
+Step 2: Install Expo Dev Client
+npx expo install expo-dev-client
+Step 3: Install NativeWind v4
+npm install nativewind
+npm install --save-dev tailwindcss@3.3.2
+Step 4: Install Navigation
+npx expo install @react-navigation/native @react-navigation/native-stack @react-navigation/drawer
+npx expo install react-native-screens react-native-safe-area-context react-native-gesture-handler react-native-reanimated
+Step 5: Install UI Dependencies
+npx expo install expo-linear-gradient
+npx expo install @react-native-picker/picker
+npx expo install lucide-react-native
+REQUIRED CONFIGURATION FILES
+1. tailwind.config.js (Root directory)
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: [
+    "./App.{js,jsx,ts,tsx}",
+    "./app/**/*.{js,jsx,ts,tsx}",
+  ],
+  presets: [require("nativewind/preset")],
+  theme: {
+    extend: {
+      colors: {
+        primary: '#030213',
+        secondary: '#6B4F3E',
+        background: '#fdfcfb',
+        foreground: '#1C0F0A',
+        muted: '#9B7B6A',
+        destructive: '#d4183d',
+      },
+    },
+  },
+  plugins: [],
+};
+2. babel.config.js (Root directory)
+module.exports = function (api) {
+  api.cache(true);
+  return {
+    presets: [
+      ["babel-preset-expo", { jsxImportSource: "nativewind" }],
+      "nativewind/babel",
+    ],
+    plugins: [
+      'react-native-reanimated/plugin', // Must be last
+    ],
+  };
+};
+3. metro.config.js (Root directory)
+const { getDefaultConfig } = require("expo/metro-config");
+const { withNativeWind } = require('nativewind/metro');
+
+const config = getDefaultConfig(__dirname);
+
+module.exports = withNativeWind(config, { input: './global.css' });
+4. global.css (Root directory)
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+5. nativewind-env.d.ts (Root directory)
+/// <reference types="nativewind/types" />
+6. app.json (Update existing)
+{
+  "expo": {
+    "name": "Belebi Prayer",
+    "slug": "belebi-prayer-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#fdfcfb"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.belebi.prayer"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#fdfcfb"
+      },
+      "package": "com.belebi.prayer"
+    },
+    "plugins": [
+      "expo-router"
+    ]
+  }
+}
+PROJECT STRUCTURE
+belebi-prayer-mobile/
+├── app/
+│   ├── components/          # Reusable components
+│   │   ├── AppHeader.tsx
+│   │   ├── Badge.tsx
+│   │   ├── Buttons.tsx
+│   │   ├── DrawerNav.tsx
+│   │   ├── PrayerRequestCard.tsx
+│   │   ├── SafetyBanner.tsx
+│   │   ├── WorldMap.tsx
+│   │   ├── CountryActionModal.tsx
+│   │   ├── ImageCarousel.tsx
+│   │   └── ReportModal.tsx
+│   ├── screens/             # All 16 screens
+│   │   ├── WelcomeScreen.tsx
+│   │   ├── SetupScreen.tsx
+│   │   ├── VerifyScreen.tsx
+│   │   ├── HomeScreen.tsx
+│   │   ├── AutoModeScreen.tsx
+│   │   ├── PrayForNationScreen.tsx
+│   │   ├── PrayerListScreen.tsx
+│   │   ├── PrayerProfileScreen.tsx
+│   │   ├── PlanPrayerScreen.tsx
+│   │   ├── PrayersSentScreen.tsx
+│   │   ├── DirectoryScreen.tsx
+│   │   ├── CountryDetailScreen.tsx
+│   │   ├── LivePrayerRoomScreen.tsx
+│   │   ├── CreateRequestScreen.tsx
+│   │   ├── SettingsScreen.tsx
+│   │   └── HelpSafetyScreen.tsx
+│   ├── context/
+│   │   └── AppContext.tsx   # Global state management
+│   ├── navigation/
+│   │   └── RootNavigator.tsx # Navigation setup
+│   ├── data/
+│   │   └── mockData.ts      # Mock data
+│   └── types/
+│       └── index.ts         # TypeScript types
+├── assets/                  # Images, fonts, etc.
+├── global.css              # Tailwind imports
+├── App.tsx                 # Entry point
+├── tailwind.config.js
+├── babel.config.js
+├── metro.config.js
+├── nativewind-env.d.ts
+├── tsconfig.json
+└── package.json
+KEY CODE PATTERNS
+1. Screens Use React Native Components
+import { View, Text, ScrollView, StyleSheet } from 'react-native';
+
+// NOT web <div>, <p>, <button>
+// USE: <View>, <Text>, <TouchableOpacity>
+2. Navigation
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+const navigation = useNavigation<NavigationProp>();
+
+// Navigate
+navigation.navigate('ScreenName', { params });
+
+// Go back
+navigation.goBack();
+3. Styling - Two Approaches
+Option A: StyleSheet (Recommended)
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fdfcfb',
+    padding: 16,
+  },
+});
+
+<View style={styles.container}>...</View>
+Option B: NativeWind (Tailwind-like)
+
+<View className="flex-1 bg-[#fdfcfb] p-4">...</View>
+4. Icons - Lucide React Native
+import { Heart, Globe, Send } from 'lucide-react-native';
+
+<Heart size={24} color="#6B4F3E" />
+5. No CSS Files in Screens
+NO import './styles.css'
+Use StyleSheet.create() or NativeWind className
+RUNNING THE APP
+Development Build (First Time)
+# iOS
+npx expo run:ios
+
+# Android
+npx expo run:android
+After First Build (Fast Refresh)
+npx expo start --dev-client
+Build for Production
+# iOS
+eas build --platform ios
+
+# Android
+eas build --platform android
+CRITICAL DIFFERENCES FROM WEB
+Web React	React Native
+<div>	<View>
+<p>, <span>, <h1>	<Text>
+<button>	<TouchableOpacity> or <Pressable>
+<input>	<TextInput>
+<img>	<Image>
+onClick	onPress
+onChange	onChangeText (for TextInput)
+CSS files	StyleSheet.create()
+className	style prop (or NativeWind className)
+style={{ }} (camelCase)	style={{ }} (same)
+<select>	<Picker> from @react-native-picker/picker
+window.location	React Navigation
+localStorage	AsyncStorage
+PACKAGE.JSON DEPENDENCIES
+{
+  "dependencies": {
+    "expo": "~51.0.0",
+    "expo-dev-client": "~4.0.0",
+    "expo-linear-gradient": "~13.0.0",
+    "react": "18.2.0",
+    "react-native": "0.74.0",
+    "react-native-gesture-handler": "~2.16.0",
+    "react-native-reanimated": "~3.10.0",
+    "react-native-safe-area-context": "4.10.0",
+    "react-native-screens": "~3.31.0",
+    "@react-navigation/native": "^6.1.9",
+    "@react-navigation/native-stack": "^6.9.17",
+    "@react-navigation/drawer": "^6.6.6",
+    "@react-native-picker/picker": "2.7.5",
+    "lucide-react-native": "^0.447.0",
+    "nativewind": "^4.0.1"
+  },
+  "devDependencies": {
+    "@types/react": "~18.2.45",
+    "typescript": "^5.1.3",
+    "tailwindcss": "3.3.2"
+  }
+}
+QUICK REFERENCE: Converting Web Code
+Example Conversion:
+❌ WEB VERSION:
+
+<div style={{ padding: '1rem', backgroundColor: '#fff' }}>
+  <h1>Title</h1>
+  <button onClick={() => alert('Hi')}>Click</button>
+</div>
+✅ REACT NATIVE VERSION:
+
+<View style={{ padding: 16, backgroundColor: '#fff' }}>
+  <Text style={{ fontSize: 24, fontWeight: '700' }}>Title</Text>
+  <TouchableOpacity onPress={() => Alert.alert('Hi')}>
+    <Text>Click</Text>
+  </TouchableOpacity>
+</View>
+SUMMARY FOR CURSOR AI:
+🎯 We are building a React Native app using:
+
+Expo SDK with Expo Dev Client (NOT Expo Go)
+NativeWind v4 for Tailwind-like styling
+React Navigation for routing
+Lucide React Native for icons
+All screens use React Native components (View, Text, TouchableOpacity, etc.)
+NO web HTML tags (div, button, p, etc.)
+NO CSS files (use StyleSheet or NativeWind)

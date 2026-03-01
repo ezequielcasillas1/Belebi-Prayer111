@@ -1,0 +1,16 @@
+{
+  "expo": {
+    "userInterfaceStyle": "automatic",
+    "extra": {
+      "eas": {
+        "projectId": "5c03b1f1-3f08-4974-81d7-ffaebae5c1d8"
+      }
+    },
+    "ios": {
+      "bundleIdentifier": "com.casiezeq.belebiprayer",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    }
+  }
+}

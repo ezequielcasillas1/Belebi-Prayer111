@@ -10,8 +10,31 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        warmLight: '#fdfcfb',
-        warmDark: '#e2d1c3',
+        // Primary palette (warm cream to tan)
+        primary: {
+          light: '#faf7f0',
+          medium: '#e8dfd2',
+          dark: '#c5ae91',
+        },
+        // Secondary palette (terracotta to peach)
+        secondary: {
+          dark: '#AF6E4D',
+          medium: '#C98B6A',
+          light: '#FFDAB9',
+        },
+        // Text colors
+        text: {
+          primary: '#1C0F0A',
+          secondary: '#5C3D2E',
+          muted: '#8B7355',
+        },
+        // UI colors
+        ui: {
+          background: '#faf7f0',
+          card: '#FFFFFF',
+          border: '#d4c4b0',
+          borderLight: '#e8dfd2',
+        },
       },
     },
   },
