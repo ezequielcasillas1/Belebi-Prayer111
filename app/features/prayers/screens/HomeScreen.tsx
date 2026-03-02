@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, FlatList } from 'react-native';
+import React, { useState, useMemo } from 'react';
+import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
 import { useNavigation, DrawerActions } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Search, Zap } from 'lucide-react-native';
@@ -10,7 +10,9 @@ import Badge from '../../../components/Badge';
 import { PrimaryButton } from '../../../components/Buttons';
 import { useAuthStore } from '../../auth/stores/authStore';
 import { usePlanStore } from '../../planning/stores/planStore';
-import { UNIQUE_COUNTRIES, Country } from '../../../data/mockData';
+import { useCountryStats } from '../hooks/usePrayerQueries';
+import { IOS_SUPPORTED_COUNTRIES, Country as ConfigCountry } from '../../../config/countries';
+import { Country, UNIQUE_COUNTRIES as MOCK_COUNTRIES } from '../../../data/mockData';
 import { RootStackParamList } from '../../../navigation/RootNavigator';
 import { colors } from '../../../theme/colors';
 
@@ -23,9 +25,60 @@ export default function HomeScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCountry, setSelectedCountry] = useState<Country | null>(null);
 
-  const sortedCountries = [...UNIQUE_COUNTRIES]
-    .sort((a, b) => b.activeRequests - a.activeRequests)
-    .filter((c) => c.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  const { data: countryStats, isLoading: isLoadingStats } = useCountryStats();
+
+  const countriesWithStats = useMemo(() => {
+    const statsMap = new Map(
+      (countryStats || []).map(s => [s.countryCode, s.activeRequests])
+    );
+
+    const mockStats: Record<string, number> = {
+      NG: 15847,  // 10K+ (Red) - High need
+      UA: 12340,  // 10K+ (Red)
+      IN: 8921,   // 1K+ (Orange)
+      PH: 5234,   // 1K+ (Orange)
+      BR: 3156,   // 1K+ (Orange)
+      KE: 2847,   // 1K+ (Orange)
+      US: 1205,   // 1K+ (Orange)
+      GB: 892,    // 100+ (Amber)
+      ZA: 567,    // 100+ (Amber)
+      MX: 423,    // 100+ (Amber)
+      DE: 312,    // 100+ (Amber)
+      ID: 256,    // 100+ (Amber)
+      AU: 189,    // 100+ (Amber)
+      PL: 145,    // 100+ (Amber)
+      CA: 134,    // 100+ (Amber)
+      GH: 78,     // 1-99 (Blue)
+      JP: 56,     // 1-99 (Blue)
+      KR: 43,     // 1-99 (Blue)
+      EG: 34,     // 1-99 (Blue)
+      AR: 28,     // 1-99 (Blue)
+      FR: 19,     // 1-99 (Blue)
+      IT: 12,     // 1-99 (Blue)
+      CL: 8,      // 1-99 (Blue)
+      CO: 5,      // 1-99 (Blue)
+    };
+
+    return IOS_SUPPORTED_COUNTRIES
+      .map(country => {
+        const apiRequests = statsMap.get(country.code);
+        const mockRequests = mockStats[country.code];
+        const activeRequests = apiRequests ?? mockRequests ?? 0;
+        
+        return {
+          code: country.code,
+          name: country.name,
+          flag: country.flag,
+          region: country.region,
+          activeRequests,
+          lat: country.lat,
+          lon: country.lon,
+        };
+      })
+      .filter(c => c.activeRequests > 0 || searchQuery)
+      .filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase()))
+      .sort((a, b) => b.activeRequests - a.activeRequests);
+  }, [countryStats, searchQuery]);
 
   const openDrawer = () => {
     navigation.dispatch(DrawerActions.openDrawer());
@@ -76,7 +129,7 @@ export default function HomeScreen() {
           </View>
 
           <View style={styles.mapContainer}>
-            <WorldMap countries={UNIQUE_COUNTRIES} onCountrySelect={setSelectedCountry} />
+            <WorldMap countries={countriesWithStats as Country[]} onCountrySelect={setSelectedCountry} />
           </View>
 
           {selectionMode === 'auto' && (
@@ -112,25 +165,37 @@ export default function HomeScreen() {
             </View>
           </View>
 
-          <FlatList
-            data={sortedCountries}
-            keyExtractor={(item) => item.code}
-            scrollEnabled={false}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.countryItem}
-                onPress={() => setSelectedCountry(item)}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.countryFlag}>{item.flag}</Text>
-                <View style={styles.countryInfo}>
-                  <Text style={styles.countryName}>{item.name}</Text>
-                  <Text style={styles.countryRegion}>{item.region}</Text>
-                </View>
-                <Badge variant="country">{item.activeRequests}</Badge>
-              </TouchableOpacity>
-            )}
-          />
+          {isLoadingStats ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="small" color={colors.secondary.dark} />
+              <Text style={styles.loadingText}>Loading countries...</Text>
+            </View>
+          ) : (
+            <FlatList
+              data={countriesWithStats}
+              keyExtractor={(item) => item.code}
+              scrollEnabled={false}
+              ListEmptyComponent={
+                <Text style={styles.emptyText}>
+                  {searchQuery ? 'No countries match your search' : 'No active prayer requests'}
+                </Text>
+              }
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.countryItem}
+                  onPress={() => setSelectedCountry(item as Country)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.countryFlag}>{item.flag}</Text>
+                  <View style={styles.countryInfo}>
+                    <Text style={styles.countryName}>{item.name}</Text>
+                    <Text style={styles.countryRegion}>{item.region}</Text>
+                  </View>
+                  <Badge variant="country">{item.activeRequests}</Badge>
+                </TouchableOpacity>
+              )}
+            />
+          )}
         </View>
       </ScrollView>
 
@@ -280,5 +345,20 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.text.muted,
     marginTop: 2,
+  },
+  loadingContainer: {
+    padding: 24,
+    alignItems: 'center',
+    gap: 8,
+  },
+  loadingText: {
+    fontSize: 14,
+    color: colors.text.secondary,
+  },
+  emptyText: {
+    fontSize: 14,
+    color: colors.text.muted,
+    textAlign: 'center',
+    paddingVertical: 24,
   },
 });

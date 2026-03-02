@@ -1,51 +1,31 @@
-import React, { useState, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, ActivityIndicator } from 'react-native';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Church, Plus, Users, ChevronRight } from 'lucide-react-native';
 import AppHeader from '../../../components/AppHeader';
 import { PrimaryButton, SecondaryButton } from '../../../components/Buttons';
-import { useAuthStore } from '../../auth/stores/authStore';
-import { churchService } from '../api/churchService';
-import { ChurchWithMemberCount } from '../../../types/database';
+import { useUserChurches } from '../hooks/useChurchQueries';
 import { RootStackParamList } from '../../../navigation/RootNavigator';
+import { colors } from '../../../theme/colors';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export default function ChurchListScreen() {
   const navigation = useNavigation<NavigationProp>();
-  const supabaseProfile = useAuthStore((state) => state.supabaseProfile);
-  const currentUser = useAuthStore((state) => state.currentUser);
-  const [churches, setChurches] = useState<ChurchWithMemberCount[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  
+  const { 
+    data: churches = [], 
+    isLoading, 
+    isError, 
+    error, 
+    refetch, 
+    isRefetching 
+  } = useUserChurches();
 
-  const userId = supabaseProfile?.id || currentUser?.id;
-
-  const loadChurches = async (showRefresh = false) => {
-    if (!userId) return;
-
-    try {
-      if (showRefresh) setIsRefreshing(true);
-      else setIsLoading(true);
-      setError(null);
-
-      const data = await churchService.getUserChurches(userId);
-      setChurches(data);
-    } catch (err: any) {
-      setError(err.message || 'Failed to load churches');
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
-    }
-  };
-
-  useFocusEffect(
-    useCallback(() => {
-      loadChurches();
-    }, [userId])
-  );
+  const handleRefresh = useCallback(() => {
+    refetch();
+  }, [refetch]);
 
   const handleChurchPress = (churchId: string) => {
     navigation.navigate('ChurchDetail', { churchId });
@@ -63,13 +43,13 @@ export default function ChurchListScreen() {
     );
   }
 
-  if (error) {
+  if (isError) {
     return (
       <View style={styles.container}>
         <AppHeader title="My Churches" showMenu showBack />
         <View style={styles.errorState}>
-          <Text style={styles.errorText}>{error}</Text>
-          <SecondaryButton onPress={() => loadChurches()}>Try Again</SecondaryButton>
+          <Text style={styles.errorText}>{(error as Error)?.message || 'Failed to load churches'}</Text>
+          <SecondaryButton onPress={handleRefresh}>Try Again</SecondaryButton>
         </View>
       </View>
     );
@@ -109,7 +89,7 @@ export default function ChurchListScreen() {
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={() => loadChurches(true)} tintColor="#6B4F3E" />
+          <RefreshControl refreshing={isRefetching} onRefresh={handleRefresh} tintColor={colors.secondary.dark} />
         }
       >
         <View style={styles.content}>
@@ -155,7 +135,7 @@ export default function ChurchListScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FDF9F4',
+    backgroundColor: colors.ui.background,
   },
   scrollView: {
     flex: 1,
@@ -171,7 +151,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 15,
-    color: '#5C3D2E',
+    color: colors.text.secondary,
   },
   errorState: {
     flex: 1,
@@ -182,7 +162,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 15,
-    color: '#7A1E1E',
+    color: colors.error.text,
     textAlign: 'center',
   },
   emptyState: {

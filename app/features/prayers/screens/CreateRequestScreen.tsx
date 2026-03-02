@@ -5,7 +5,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Plus, AlertTriangle, X } from 'lucide-react-native';
 import AppHeader from '../../../components/AppHeader';
 import { PrimaryButton, SecondaryButton, GhostButton } from '../../../components/Buttons';
-import { useUIStore } from '../../../stores/uiStore';
+import { useCreatePrayerRequest, useDismissPrayerRequest } from '../hooks/usePrayerQueries';
 import { IMG_LANDSCAPE, IMG_AFRICAN_WOMAN, IMG_ASIAN_MAN } from '../../../data/mockData';
 import { RootStackParamList } from '../../../navigation/RootNavigator';
 
@@ -13,22 +13,24 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const MOCK_IMAGES = [IMG_LANDSCAPE, IMG_AFRICAN_WOMAN, IMG_ASIAN_MAN];
 const AUTO_DISMISS_OPTIONS = [
-  { value: '1month', label: '1 Month' },
-  { value: '6months', label: '6 Months' },
-  { value: '1year', label: '1 Year' },
+  { value: '1month' as const, label: '1 Month' },
+  { value: '6months' as const, label: '6 Months' },
+  { value: '1year' as const, label: '1 Year' },
 ];
 
 export default function CreateRequestScreen() {
   const navigation = useNavigation<NavigationProp>();
-  const showToast = useUIStore((state) => state.showToast);
 
-  const [denomination, setDenomination] = useState('');
+  const createPrayerRequest = useCreatePrayerRequest();
+  const dismissPrayerRequest = useDismissPrayerRequest();
+
+  const [description, setDescription] = useState('');
   const [requestText, setRequestText] = useState('');
   const [profileImages, setProfileImages] = useState<string[]>([]);
   const [emergencyImages, setEmergencyImages] = useState<string[]>([]);
-  const [autoDismiss, setAutoDismiss] = useState('1month');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [autoDismiss, setAutoDismiss] = useState<'1month' | '6months' | '1year'>('1month');
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [createdRequestId, setCreatedRequestId] = useState<string | null>(null);
 
   const handleAddProfileImage = () => {
     if (profileImages.length < 3) {
@@ -58,18 +60,28 @@ export default function CreateRequestScreen() {
 
   const handleSubmit = async () => {
     if (!requestText.trim()) {
-      showToast('error', 'Please write your prayer request');
       return;
     }
-    setIsSubmitting(true);
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    setIsSubmitting(false);
-    setIsSubmitted(true);
-    showToast('success', 'Prayer request submitted!');
+
+    try {
+      const result = await createPrayerRequest.mutateAsync({
+        requestText: requestText.trim(),
+        description: description.trim() || undefined,
+        profileImages: profileImages.length > 0 ? profileImages : undefined,
+        emergencyImages: emergencyImages.length > 0 ? emergencyImages : undefined,
+        autoDismissTime: autoDismiss,
+      });
+      setCreatedRequestId(result.id);
+      setIsSubmitted(true);
+    } catch (error) {
+      // Error is handled by the mutation hook
+    }
   };
 
-  const handleDismiss = () => {
-    showToast('info', 'Request dismissed');
+  const handleDismiss = async () => {
+    if (createdRequestId) {
+      await dismissPrayerRequest.mutateAsync(createdRequestId);
+    }
     navigation.goBack();
   };
 
@@ -204,12 +216,12 @@ export default function CreateRequestScreen() {
               fullWidth
               size="lg"
               onPress={handleSubmit}
-              loading={isSubmitting}
-              disabled={!requestText.trim()}
+              loading={createPrayerRequest.isPending}
+              disabled={!requestText.trim() || createPrayerRequest.isPending}
             >
               Submit Prayer Request
             </PrimaryButton>
-            <SecondaryButton fullWidth onPress={() => navigation.goBack()}>
+            <SecondaryButton fullWidth onPress={() => navigation.goBack()} disabled={createPrayerRequest.isPending}>
               Cancel
             </SecondaryButton>
           </View>

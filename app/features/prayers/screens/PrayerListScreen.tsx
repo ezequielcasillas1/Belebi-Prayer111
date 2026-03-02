@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, Modal, ScrollView } from 'react-native';
+import React, { useState, useMemo, useCallback } from 'react';
+import { View, Text, StyleSheet, FlatList, TextInput, TouchableOpacity, Modal, ScrollView, ActivityIndicator, RefreshControl } from 'react-native';
 import { useNavigation, DrawerActions } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Search, Filter, Zap, ChevronRight, ChevronDown, Check, X } from 'lucide-react-native';
@@ -7,8 +7,11 @@ import AppHeader from '../../../components/AppHeader';
 import PrayerRequestCard from '../../../components/PrayerRequestCard';
 import { PrimaryButton, SecondaryButton, GhostButton } from '../../../components/Buttons';
 import { usePrayerStore } from '../stores/prayerStore';
-import { PRAYER_REQUESTS, UNIQUE_COUNTRIES, DENOMINATIONS } from '../../../data/mockData';
+import { usePrayerRequests } from '../hooks/usePrayerQueries';
+import { IOS_SUPPORTED_COUNTRIES } from '../../../config/countries';
+import { DENOMINATIONS } from '../../../data/mockData';
 import { RootStackParamList } from '../../../navigation/RootNavigator';
+import { colors } from '../../../theme/colors';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -23,9 +26,20 @@ export default function PrayerListScreen() {
   const [showCountryPicker, setShowCountryPicker] = useState(false);
   const [showDenominationPicker, setShowDenominationPicker] = useState(false);
 
+  const { 
+    data: prayerData, 
+    isLoading, 
+    isError, 
+    refetch, 
+    isRefetching 
+  } = usePrayerRequests({ 
+    countryCode: countryFilter || undefined,
+    excludeSent: true 
+  });
+
   const filteredRequests = useMemo(() => {
-    return PRAYER_REQUESTS
-      .filter((r) => !hasSentPrayer(r.id))
+    const requests = prayerData?.data || [];
+    return requests
       .filter((r) => {
         if (searchQuery) {
           const query = searchQuery.toLowerCase();
@@ -37,10 +51,12 @@ export default function PrayerListScreen() {
         }
         return true;
       })
-      .filter((r) => !countryFilter || r.countryCode === countryFilter)
-      .filter((r) => !denominationFilter || r.denomination === denominationFilter)
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  }, [searchQuery, countryFilter, denominationFilter, hasSentPrayer]);
+      .filter((r) => !denominationFilter || r.denomination === denominationFilter);
+  }, [prayerData, searchQuery, denominationFilter]);
+
+  const handleRefresh = useCallback(() => {
+    refetch();
+  }, [refetch]);
 
   const clearFilters = () => {
     setCountryFilter('');
@@ -122,7 +138,7 @@ export default function PrayerListScreen() {
         <View style={styles.filterSection}>
           <TouchableOpacity style={styles.filterChip} onPress={() => setShowCountryPicker(true)}>
             <Text style={styles.filterChipText}>
-              {countryFilter ? UNIQUE_COUNTRIES.find(c => c.code === countryFilter)?.name : 'All Countries'}
+              {countryFilter ? IOS_SUPPORTED_COUNTRIES.find(c => c.code === countryFilter)?.name : 'All Countries'}
             </Text>
             <ChevronDown size={14} color="#6B4F3E" />
           </TouchableOpacity>
@@ -138,30 +154,50 @@ export default function PrayerListScreen() {
         </View>
       )}
 
-      <FlatList
-        data={filteredRequests}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-        renderItem={({ item }) => (
-          <PrayerRequestCard
-            request={item}
-            onPress={() => navigation.navigate('PrayerProfile', { requestId: item.id })}
-          />
-        )}
-        ListEmptyComponent={
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyTitle}>No prayers found</Text>
-            <Text style={styles.emptyText}>Try adjusting your filters</Text>
-          </View>
-        }
-      />
+      {isLoading ? (
+        <View style={styles.loadingState}>
+          <ActivityIndicator size="large" color={colors.secondary.dark} />
+          <Text style={styles.loadingText}>Loading prayer requests...</Text>
+        </View>
+      ) : isError ? (
+        <View style={styles.errorState}>
+          <Text style={styles.errorTitle}>Unable to load prayers</Text>
+          <Text style={styles.errorText}>Please check your connection and try again</Text>
+          <PrimaryButton size="sm" onPress={handleRefresh}>Retry</PrimaryButton>
+        </View>
+      ) : (
+        <FlatList
+          data={filteredRequests}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefetching}
+              onRefresh={handleRefresh}
+              tintColor={colors.secondary.dark}
+            />
+          }
+          renderItem={({ item }) => (
+            <PrayerRequestCard
+              request={item}
+              onPress={() => navigation.navigate('PrayerProfile', { requestId: item.id })}
+            />
+          )}
+          ListEmptyComponent={
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyTitle}>No prayers found</Text>
+              <Text style={styles.emptyText}>Try adjusting your filters</Text>
+            </View>
+          }
+        />
+      )}
 
       {renderPicker(
         showCountryPicker,
         () => setShowCountryPicker(false),
         'Select Country',
-        UNIQUE_COUNTRIES.map((c) => ({ label: `${c.flag} ${c.name}`, value: c.code })),
+        IOS_SUPPORTED_COUNTRIES.map((c) => ({ label: `${c.flag} ${c.name}`, value: c.code })),
         countryFilter,
         setCountryFilter
       )}
@@ -306,5 +342,34 @@ const styles = StyleSheet.create({
   modalItemTextSelected: {
     fontWeight: '600',
     color: '#6B4F3E',
+  },
+  loadingState: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: colors.text.secondary,
+  },
+  errorState: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+    paddingHorizontal: 20,
+    gap: 12,
+  },
+  errorTitle: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: colors.text.primary,
+  },
+  errorText: {
+    fontSize: 14,
+    color: colors.text.secondary,
+    textAlign: 'center',
   },
 });

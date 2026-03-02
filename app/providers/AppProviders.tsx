@@ -1,5 +1,6 @@
 import React, { ReactNode, useEffect } from 'react';
 import { usePlanStore } from '../features/planning/stores/planStore';
+import { QueryProvider } from './QueryProvider';
 
 interface AppProvidersProps {
   children: ReactNode;
@@ -18,7 +19,11 @@ export function AppProviders({ children }: AppProvidersProps) {
     return () => clearInterval(interval);
   }, [checkAutoExpiry, checkPlanExpiry]);
 
-  return <>{children}</>;
+  return (
+    <QueryProvider>
+      {children}
+    </QueryProvider>
+  );
 }
 
 export default AppProviders;

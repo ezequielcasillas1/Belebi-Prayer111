@@ -1,89 +1,123 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import Svg, { Path, Circle, G, Text as SvgText } from 'react-native-svg';
+import React, { useMemo } from 'react';
+import { View, Text, StyleSheet, Platform } from 'react-native';
+import MapView, { Marker, PROVIDER_DEFAULT } from 'react-native-maps';
 import { Country } from '../data/mockData';
+import { colors } from '../theme/colors';
 
 interface WorldMapProps {
   countries: Country[];
   onCountrySelect: (country: Country) => void;
 }
 
-const CONTINENT_PATHS = {
-  northAmerica: 'M 95,55 C 120,48 195,52 262,65 L 275,85 L 272,120 L 255,152 L 232,185 L 208,215 L 183,228 L 162,222 L 148,200 L 130,172 L 104,148 L 82,118 L 72,85 Z',
-  greenland: 'M 192,18 L 240,12 L 272,20 L 268,42 L 245,52 L 208,52 L 190,38 Z',
-  southAmerica: 'M 192,235 L 242,225 L 272,245 L 285,275 L 288,315 L 275,358 L 254,385 L 222,400 L 190,398 L 168,378 L 156,348 L 155,308 L 165,270 L 178,252 Z',
-  europe: 'M 432,48 L 505,42 L 538,58 L 548,82 L 538,105 L 558,118 L 548,138 L 510,150 L 475,158 L 448,150 L 432,128 L 428,92 Z',
-  africa: 'M 440,162 L 495,155 L 538,162 L 568,188 L 580,228 L 578,272 L 562,318 L 538,348 L 508,362 L 476,368 L 448,352 L 428,322 L 418,282 L 418,240 L 430,202 Z',
-  asia: 'M 548,42 L 658,38 L 755,40 L 848,52 L 918,68 L 942,98 L 932,132 L 902,152 L 862,142 L 822,168 L 788,182 L 745,178 L 705,198 L 658,208 L 608,198 L 572,182 L 548,158 L 542,118 L 548,72 Z',
-  seAsia: 'M 718,198 L 752,192 L 768,225 L 758,258 L 740,262 L 722,242 L 716,218 Z',
-  oceania: 'M 748,282 L 818,268 L 882,272 L 922,298 L 918,332 L 878,358 L 822,368 L 768,352 L 745,322 L 742,298 Z',
+const INITIAL_REGION = {
+  latitude: 20,
+  longitude: 0,
+  latitudeDelta: 100,
+  longitudeDelta: 180,
 };
 
-function latLonToXY(lat: number, lon: number): { x: number; y: number } {
-  const x = ((lon + 180) / 360) * 900;
-  const y = ((90 - lat) / 180) * 450;
-  return { x, y };
+const THRESHOLD_COLORS = {
+  low: '#3B82F6',      // Blue (1-99)
+  moderate: '#F59E0B', // Amber (100-999)
+  high: '#F97316',     // Orange (1,000-9,999)
+  veryHigh: '#EF4444', // Red (10,000+)
+};
+
+function getMarkerSize(count: number): number {
+  if (count >= 10000) return 44;
+  if (count >= 1000) return 40;
+  if (count >= 100) return 36;
+  return 32;
+}
+
+function getMarkerColor(count: number): string {
+  if (count >= 10000) return THRESHOLD_COLORS.veryHigh;
+  if (count >= 1000) return THRESHOLD_COLORS.high;
+  if (count >= 100) return THRESHOLD_COLORS.moderate;
+  return THRESHOLD_COLORS.low;
+}
+
+function formatCount(count: number): string {
+  if (count >= 10000) return `${Math.floor(count / 1000)}K`;
+  if (count >= 1000) return `${(count / 1000).toFixed(1)}K`;
+  return count.toString();
 }
 
 export default function WorldMap({ countries, onCountrySelect }: WorldMapProps) {
-  const [pressedCountry, setPressedCountry] = useState<string | null>(null);
-
-  const uniqueCountries = countries.filter(
-    (country, index, self) => index === self.findIndex((c) => c.code === country.code)
-  );
+  const uniqueCountries = useMemo(() => {
+    const seen = new Set<string>();
+    return countries.filter((country) => {
+      if (!country.lat || !country.lon) return false;
+      if (seen.has(country.code)) return false;
+      seen.add(country.code);
+      return true;
+    });
+  }, [countries]);
 
   return (
     <View style={styles.container}>
-      <Svg viewBox="0 0 900 450" style={styles.svg}>
-        {Object.values(CONTINENT_PATHS).map((path, index) => (
-          <Path
-            key={index}
-            d={path}
-            fill="#D4C4B0"
-            stroke="#B8A090"
-            strokeWidth={1}
-          />
-        ))}
-
+      <MapView
+        style={styles.map}
+        provider={PROVIDER_DEFAULT}
+        initialRegion={INITIAL_REGION}
+        rotateEnabled={false}
+        pitchEnabled={false}
+        showsUserLocation={false}
+        showsMyLocationButton={false}
+        showsCompass={false}
+        showsScale={false}
+        toolbarEnabled={false}
+        minZoomLevel={1}
+        maxZoomLevel={8}
+        mapPadding={{ top: 0, right: 0, bottom: 0, left: 0 }}
+      >
         {uniqueCountries.map((country) => {
-          const { x, y } = latLonToXY(country.lat, country.lon);
-          const isPressed = pressedCountry === country.code;
-          const radius = isPressed ? 12 : 10;
-          const fill = isPressed ? '#6B4F3E' : '#8B6F5E';
+          const size = getMarkerSize(country.activeRequests);
+          const bgColor = getMarkerColor(country.activeRequests);
 
           return (
-            <G key={country.code}>
-              <Circle
-                cx={x}
-                cy={y}
-                r={radius}
-                fill={fill}
-                stroke="#FFFFFF"
-                strokeWidth={2}
-                onPressIn={() => setPressedCountry(country.code)}
-                onPressOut={() => {
-                  setPressedCountry(null);
-                  onCountrySelect(country);
-                }}
-              />
-              <SvgText
-                x={x}
-                y={y + 4}
-                fill="#FFFFFF"
-                fontSize={10}
-                fontWeight="bold"
-                textAnchor="middle"
-              >
-                {country.activeRequests}
-              </SvgText>
-            </G>
+            <Marker
+              key={country.code}
+              coordinate={{
+                latitude: country.lat,
+                longitude: country.lon,
+              }}
+              onPress={() => onCountrySelect(country)}
+              anchor={{ x: 0.5, y: 0.5 }}
+              tracksViewChanges={false}
+            >
+              <View style={[styles.markerOuter, { width: size, height: size }]}>
+                <View style={[styles.marker, { backgroundColor: bgColor }]}>
+                  <Text style={[styles.markerText, size >= 40 && styles.markerTextLarge]}>
+                    {formatCount(country.activeRequests)}
+                  </Text>
+                </View>
+              </View>
+            </Marker>
           );
         })}
-      </Svg>
+      </MapView>
 
       <View style={styles.legend}>
-        <View style={styles.legendDot} />
-        <Text style={styles.legendText}>Tap a country to pray</Text>
+        <View style={styles.legendRow}>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendDot, { backgroundColor: THRESHOLD_COLORS.low }]} />
+            <Text style={styles.legendLabel}>1-99</Text>
+          </View>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendDot, { backgroundColor: THRESHOLD_COLORS.moderate }]} />
+            <Text style={styles.legendLabel}>100+</Text>
+          </View>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendDot, { backgroundColor: THRESHOLD_COLORS.high }]} />
+            <Text style={styles.legendLabel}>1K+</Text>
+          </View>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendDot, { backgroundColor: THRESHOLD_COLORS.veryHigh }]} />
+            <Text style={styles.legendLabel}>10K+</Text>
+          </View>
+        </View>
+        <Text style={styles.legendHint}>Tap a marker to pray for that country</Text>
       </View>
     </View>
   );
@@ -94,28 +128,79 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
   },
-  svg: {
+  map: {
     width: '100%',
-    aspectRatio: 2,
+    height: 240,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  markerOuter: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  marker: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 50,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2.5,
+    borderColor: '#FFFFFF',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 5,
+      },
+    }),
+  },
+  markerText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  markerTextLarge: {
+    fontSize: 12,
   },
   legend: {
+    alignItems: 'center',
+    marginTop: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    backgroundColor: 'rgba(59, 130, 246, 0.06)',
+    borderRadius: 24,
+  },
+  legendRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginTop: 12,
-    padding: 10,
-    backgroundColor: 'rgba(107, 79, 62, 0.06)',
-    borderRadius: 20,
+    justifyContent: 'center',
+    gap: 16,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
   },
   legendDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: '#8B6F5E',
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
   },
-  legendText: {
-    fontSize: 13,
-    color: '#5C3D2E',
-    fontWeight: '500',
+  legendLabel: {
+    fontSize: 12,
+    color: colors.text.secondary,
+    fontWeight: '600',
+  },
+  legendHint: {
+    fontSize: 11,
+    color: colors.text.muted,
+    textAlign: 'center',
+    marginTop: 8,
   },
 });
