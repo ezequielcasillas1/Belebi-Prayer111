@@ -41,12 +41,11 @@ export class SupabaseEdgeTranslationProvider implements TranslationProvider {
 
   async translate(request: TranslationRequest): Promise<TranslationResult> {
     try {
-      const { data, error } = await supabase.functions.invoke('translate-text', {
+      const { data, error } = await supabase.functions.invoke('translate', {
         body: {
           text: request.text,
           sourceLanguage: request.sourceLanguage,
           targetLanguage: request.targetLanguage,
-          context: request.context,
         },
       });
 

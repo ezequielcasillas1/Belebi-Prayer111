@@ -1,7 +1,10 @@
 /**
- * iOS App Store Supported Countries
- * Complete list of all 175 countries/regions supported by iOS App Store
- * Includes ISO codes, default languages, and supported languages for each region
+ * World Countries for Prayer App
+ * Complete list of ~225 countries/territories including:
+ * - 175 iOS App Store supported countries
+ * - 15 countries without dedicated storefronts (can still use regional stores)
+ * - 4 restricted/sanctioned countries (users cannot sign up, but can pray FOR)
+ * - 30+ territories (distinct regions with their own identity)
  */
 
 export interface Country {
@@ -15,6 +18,10 @@ export interface Country {
   callingCode: string;
   lat: number;       // Latitude (center point)
   lon: number;       // Longitude (center point)
+  isRestricted?: boolean;    // Sanctioned countries (Iran, North Korea, etc.)
+  hasStorefront?: boolean;   // Has dedicated iOS App Store (false = uses regional store)
+  isTerritory?: boolean;     // Non-sovereign territory (Puerto Rico, Greenland, etc.)
+  parentCountry?: string;    // Parent country code for territories
 }
 
 export type LanguageCode = 
@@ -23,7 +30,7 @@ export type LanguageCode =
   | 'fr' | 'fr-FR' | 'fr-CA'
   | 'de' | 'it' | 'pt' | 'pt-BR' | 'pt-PT'
   | 'zh' | 'zh-Hans' | 'zh-Hant'
-  | 'ja' | 'ko' | 'ar' | 'he' | 'hi'
+  | 'ja' | 'ko' | 'ar' | 'he' | 'hi' | 'fa'
   | 'ru' | 'uk' | 'pl' | 'nl' | 'sv'
   | 'da' | 'fi' | 'no' | 'cs' | 'sk'
   | 'hu' | 'ro' | 'el' | 'tr' | 'th'
@@ -262,6 +269,103 @@ export const IOS_SUPPORTED_COUNTRIES: Country[] = [
   { code: 'ZW', code3: 'ZWE', name: 'Zimbabwe', flag: '🇿🇼', region: 'Africa', defaultLanguage: 'en-GB', supportedLanguages: ['en-GB'], callingCode: '+263', lat: -19.0154, lon: 29.1549 },
 ];
 
+// Countries without dedicated iOS App Store storefronts (can use regional stores)
+export const NO_STOREFRONT_COUNTRIES: Country[] = [
+  { code: 'AD', code3: 'AND', name: 'Andorra', flag: '🇦🇩', region: 'Europe', defaultLanguage: 'es', supportedLanguages: ['es', 'fr', 'ca'], callingCode: '+376', lat: 42.5063, lon: 1.5218, hasStorefront: false },
+  { code: 'BI', code3: 'BDI', name: 'Burundi', flag: '🇧🇮', region: 'Africa', defaultLanguage: 'fr', supportedLanguages: ['fr', 'en-GB'], callingCode: '+257', lat: -3.3731, lon: 29.9189, hasStorefront: false },
+  { code: 'CF', code3: 'CAF', name: 'Central African Republic', flag: '🇨🇫', region: 'Africa', defaultLanguage: 'fr', supportedLanguages: ['fr'], callingCode: '+236', lat: 6.6111, lon: 20.9394, hasStorefront: false },
+  { code: 'KM', code3: 'COM', name: 'Comoros', flag: '🇰🇲', region: 'Africa', defaultLanguage: 'ar', supportedLanguages: ['ar', 'fr'], callingCode: '+269', lat: -11.6455, lon: 43.3333, hasStorefront: false },
+  { code: 'DJ', code3: 'DJI', name: 'Djibouti', flag: '🇩🇯', region: 'Africa', defaultLanguage: 'fr', supportedLanguages: ['fr', 'ar'], callingCode: '+253', lat: 11.8251, lon: 42.5903, hasStorefront: false },
+  { code: 'ER', code3: 'ERI', name: 'Eritrea', flag: '🇪🇷', region: 'Africa', defaultLanguage: 'en-GB', supportedLanguages: ['en-GB', 'ar'], callingCode: '+291', lat: 15.1794, lon: 39.7823, hasStorefront: false },
+  { code: 'ET', code3: 'ETH', name: 'Ethiopia', flag: '🇪🇹', region: 'Africa', defaultLanguage: 'en-GB', supportedLanguages: ['en-GB'], callingCode: '+251', lat: 9.1450, lon: 40.4897, hasStorefront: false },
+  { code: 'GN', code3: 'GIN', name: 'Guinea', flag: '🇬🇳', region: 'Africa', defaultLanguage: 'fr', supportedLanguages: ['fr'], callingCode: '+224', lat: 9.9456, lon: -9.6966, hasStorefront: false },
+  { code: 'LS', code3: 'LSO', name: 'Lesotho', flag: '🇱🇸', region: 'Africa', defaultLanguage: 'en-GB', supportedLanguages: ['en-GB'], callingCode: '+266', lat: -29.6100, lon: 28.2336, hasStorefront: false },
+  { code: 'LI', code3: 'LIE', name: 'Liechtenstein', flag: '🇱🇮', region: 'Europe', defaultLanguage: 'de', supportedLanguages: ['de'], callingCode: '+423', lat: 47.1660, lon: 9.5554, hasStorefront: false },
+  { code: 'MC', code3: 'MCO', name: 'Monaco', flag: '🇲🇨', region: 'Europe', defaultLanguage: 'fr', supportedLanguages: ['fr'], callingCode: '+377', lat: 43.7384, lon: 7.4246, hasStorefront: false },
+  { code: 'PS', code3: 'PSE', name: 'Palestine', flag: '🇵🇸', region: 'Middle East', defaultLanguage: 'ar', supportedLanguages: ['ar', 'en-GB'], callingCode: '+970', lat: 31.9522, lon: 35.2332, hasStorefront: false },
+  { code: 'SM', code3: 'SMR', name: 'San Marino', flag: '🇸🇲', region: 'Europe', defaultLanguage: 'it', supportedLanguages: ['it'], callingCode: '+378', lat: 43.9424, lon: 12.4578, hasStorefront: false },
+  { code: 'SO', code3: 'SOM', name: 'Somalia', flag: '🇸🇴', region: 'Africa', defaultLanguage: 'ar', supportedLanguages: ['ar', 'en-GB'], callingCode: '+252', lat: 5.1521, lon: 46.1996, hasStorefront: false },
+  { code: 'SS', code3: 'SSD', name: 'South Sudan', flag: '🇸🇸', region: 'Africa', defaultLanguage: 'en-GB', supportedLanguages: ['en-GB', 'ar'], callingCode: '+211', lat: 6.8770, lon: 31.3070, hasStorefront: false },
+  { code: 'SD', code3: 'SDN', name: 'Sudan', flag: '🇸🇩', region: 'Africa', defaultLanguage: 'ar', supportedLanguages: ['ar', 'en-GB'], callingCode: '+249', lat: 12.8628, lon: 30.2176, hasStorefront: false },
+  { code: 'TL', code3: 'TLS', name: 'Timor-Leste', flag: '🇹🇱', region: 'Asia', defaultLanguage: 'pt', supportedLanguages: ['pt', 'en-GB'], callingCode: '+670', lat: -8.8742, lon: 125.7275, hasStorefront: false },
+  { code: 'VA', code3: 'VAT', name: 'Vatican City', flag: '🇻🇦', region: 'Europe', defaultLanguage: 'it', supportedLanguages: ['it'], callingCode: '+379', lat: 41.9029, lon: 12.4534, hasStorefront: false },
+];
+
+// Restricted/sanctioned countries (users cannot sign up FROM here, but can pray FOR)
+export const RESTRICTED_COUNTRIES: Country[] = [
+  { code: 'CU', code3: 'CUB', name: 'Cuba', flag: '🇨🇺', region: 'Caribbean', defaultLanguage: 'es', supportedLanguages: ['es'], callingCode: '+53', lat: 21.5218, lon: -77.7812, isRestricted: true },
+  { code: 'IR', code3: 'IRN', name: 'Iran', flag: '🇮🇷', region: 'Middle East', defaultLanguage: 'fa', supportedLanguages: ['fa', 'en-GB'], callingCode: '+98', lat: 32.4279, lon: 53.6880, isRestricted: true },
+  { code: 'KP', code3: 'PRK', name: 'North Korea', flag: '🇰🇵', region: 'Asia', defaultLanguage: 'ko', supportedLanguages: ['ko'], callingCode: '+850', lat: 40.3399, lon: 127.5101, isRestricted: true },
+  { code: 'SY', code3: 'SYR', name: 'Syria', flag: '🇸🇾', region: 'Middle East', defaultLanguage: 'ar', supportedLanguages: ['ar'], callingCode: '+963', lat: 34.8021, lon: 38.9968, isRestricted: true },
+];
+
+// Territories - non-sovereign regions with distinct identity (users can sign up and pray)
+export const TERRITORIES: Country[] = [
+  // US Territories
+  { code: 'PR', code3: 'PRI', name: 'Puerto Rico', flag: '🇵🇷', region: 'Caribbean', defaultLanguage: 'es', supportedLanguages: ['es', 'en-US'], callingCode: '+1787', lat: 18.2208, lon: -66.5901, isTerritory: true, parentCountry: 'US' },
+  { code: 'GU', code3: 'GUM', name: 'Guam', flag: '🇬🇺', region: 'Oceania', defaultLanguage: 'en-US', supportedLanguages: ['en-US'], callingCode: '+1671', lat: 13.4443, lon: 144.7937, isTerritory: true, parentCountry: 'US' },
+  { code: 'VI', code3: 'VIR', name: 'U.S. Virgin Islands', flag: '🇻🇮', region: 'Caribbean', defaultLanguage: 'en-US', supportedLanguages: ['en-US'], callingCode: '+1340', lat: 18.3358, lon: -64.8963, isTerritory: true, parentCountry: 'US' },
+  { code: 'AS', code3: 'ASM', name: 'American Samoa', flag: '🇦🇸', region: 'Oceania', defaultLanguage: 'en-US', supportedLanguages: ['en-US'], callingCode: '+1684', lat: -14.2710, lon: -170.1322, isTerritory: true, parentCountry: 'US' },
+  { code: 'MP', code3: 'MNP', name: 'Northern Mariana Islands', flag: '🇲🇵', region: 'Oceania', defaultLanguage: 'en-US', supportedLanguages: ['en-US'], callingCode: '+1670', lat: 15.0979, lon: 145.6739, isTerritory: true, parentCountry: 'US' },
+  
+  // Danish Territories
+  { code: 'GL', code3: 'GRL', name: 'Greenland', flag: '🇬🇱', region: 'North America', defaultLanguage: 'da', supportedLanguages: ['da', 'en-GB'], callingCode: '+299', lat: 71.7069, lon: -42.6043, isTerritory: true, parentCountry: 'DK' },
+  { code: 'FO', code3: 'FRO', name: 'Faroe Islands', flag: '🇫🇴', region: 'Europe', defaultLanguage: 'da', supportedLanguages: ['da', 'en-GB'], callingCode: '+298', lat: 61.8926, lon: -6.9118, isTerritory: true, parentCountry: 'DK' },
+  
+  // UK Territories
+  { code: 'GI', code3: 'GIB', name: 'Gibraltar', flag: '🇬🇮', region: 'Europe', defaultLanguage: 'en-GB', supportedLanguages: ['en-GB', 'es'], callingCode: '+350', lat: 36.1408, lon: -5.3536, isTerritory: true, parentCountry: 'GB' },
+  { code: 'IM', code3: 'IMN', name: 'Isle of Man', flag: '🇮🇲', region: 'Europe', defaultLanguage: 'en-GB', supportedLanguages: ['en-GB'], callingCode: '+44', lat: 54.2361, lon: -4.5481, isTerritory: true, parentCountry: 'GB' },
+  { code: 'JE', code3: 'JEY', name: 'Jersey', flag: '🇯🇪', region: 'Europe', defaultLanguage: 'en-GB', supportedLanguages: ['en-GB', 'fr'], callingCode: '+44', lat: 49.2144, lon: -2.1312, isTerritory: true, parentCountry: 'GB' },
+  { code: 'GG', code3: 'GGY', name: 'Guernsey', flag: '🇬🇬', region: 'Europe', defaultLanguage: 'en-GB', supportedLanguages: ['en-GB', 'fr'], callingCode: '+44', lat: 49.4657, lon: -2.5853, isTerritory: true, parentCountry: 'GB' },
+  { code: 'FK', code3: 'FLK', name: 'Falkland Islands', flag: '🇫🇰', region: 'South America', defaultLanguage: 'en-GB', supportedLanguages: ['en-GB'], callingCode: '+500', lat: -51.7963, lon: -59.5236, isTerritory: true, parentCountry: 'GB' },
+  { code: 'SH', code3: 'SHN', name: 'Saint Helena', flag: '🇸🇭', region: 'Africa', defaultLanguage: 'en-GB', supportedLanguages: ['en-GB'], callingCode: '+290', lat: -15.9650, lon: -5.7089, isTerritory: true, parentCountry: 'GB' },
+  { code: 'PN', code3: 'PCN', name: 'Pitcairn Islands', flag: '🇵🇳', region: 'Oceania', defaultLanguage: 'en-GB', supportedLanguages: ['en-GB'], callingCode: '+64', lat: -24.3768, lon: -128.3242, isTerritory: true, parentCountry: 'GB' },
+  
+  // Dutch Territories
+  { code: 'AW', code3: 'ABW', name: 'Aruba', flag: '🇦🇼', region: 'Caribbean', defaultLanguage: 'nl', supportedLanguages: ['nl', 'es', 'en-GB'], callingCode: '+297', lat: 12.5211, lon: -69.9683, isTerritory: true, parentCountry: 'NL' },
+  { code: 'CW', code3: 'CUW', name: 'Curaçao', flag: '🇨🇼', region: 'Caribbean', defaultLanguage: 'nl', supportedLanguages: ['nl', 'en-GB'], callingCode: '+599', lat: 12.1696, lon: -68.9900, isTerritory: true, parentCountry: 'NL' },
+  { code: 'SX', code3: 'SXM', name: 'Sint Maarten', flag: '🇸🇽', region: 'Caribbean', defaultLanguage: 'nl', supportedLanguages: ['nl', 'en-GB'], callingCode: '+1721', lat: 18.0425, lon: -63.0548, isTerritory: true, parentCountry: 'NL' },
+  { code: 'BQ', code3: 'BES', name: 'Caribbean Netherlands', flag: '🇧🇶', region: 'Caribbean', defaultLanguage: 'nl', supportedLanguages: ['nl', 'en-GB'], callingCode: '+599', lat: 12.1784, lon: -68.2385, isTerritory: true, parentCountry: 'NL' },
+  
+  // French Territories
+  { code: 'PF', code3: 'PYF', name: 'French Polynesia', flag: '🇵🇫', region: 'Oceania', defaultLanguage: 'fr', supportedLanguages: ['fr'], callingCode: '+689', lat: -17.6797, lon: -149.4068, isTerritory: true, parentCountry: 'FR' },
+  { code: 'NC', code3: 'NCL', name: 'New Caledonia', flag: '🇳🇨', region: 'Oceania', defaultLanguage: 'fr', supportedLanguages: ['fr'], callingCode: '+687', lat: -20.9043, lon: 165.6180, isTerritory: true, parentCountry: 'FR' },
+  { code: 'MQ', code3: 'MTQ', name: 'Martinique', flag: '🇲🇶', region: 'Caribbean', defaultLanguage: 'fr', supportedLanguages: ['fr'], callingCode: '+596', lat: 14.6415, lon: -61.0242, isTerritory: true, parentCountry: 'FR' },
+  { code: 'GP', code3: 'GLP', name: 'Guadeloupe', flag: '🇬🇵', region: 'Caribbean', defaultLanguage: 'fr', supportedLanguages: ['fr'], callingCode: '+590', lat: 16.2650, lon: -61.5510, isTerritory: true, parentCountry: 'FR' },
+  { code: 'RE', code3: 'REU', name: 'Réunion', flag: '🇷🇪', region: 'Africa', defaultLanguage: 'fr', supportedLanguages: ['fr'], callingCode: '+262', lat: -21.1151, lon: 55.5364, isTerritory: true, parentCountry: 'FR' },
+  { code: 'YT', code3: 'MYT', name: 'Mayotte', flag: '🇾🇹', region: 'Africa', defaultLanguage: 'fr', supportedLanguages: ['fr'], callingCode: '+262', lat: -12.8275, lon: 45.1662, isTerritory: true, parentCountry: 'FR' },
+  { code: 'GF', code3: 'GUF', name: 'French Guiana', flag: '🇬🇫', region: 'South America', defaultLanguage: 'fr', supportedLanguages: ['fr'], callingCode: '+594', lat: 3.9339, lon: -53.1258, isTerritory: true, parentCountry: 'FR' },
+  { code: 'BL', code3: 'BLM', name: 'Saint Barthélemy', flag: '🇧🇱', region: 'Caribbean', defaultLanguage: 'fr', supportedLanguages: ['fr'], callingCode: '+590', lat: 17.9000, lon: -62.8333, isTerritory: true, parentCountry: 'FR' },
+  { code: 'MF', code3: 'MAF', name: 'Saint Martin', flag: '🇲🇫', region: 'Caribbean', defaultLanguage: 'fr', supportedLanguages: ['fr', 'en-GB'], callingCode: '+590', lat: 18.0708, lon: -63.0501, isTerritory: true, parentCountry: 'FR' },
+  { code: 'WF', code3: 'WLF', name: 'Wallis and Futuna', flag: '🇼🇫', region: 'Oceania', defaultLanguage: 'fr', supportedLanguages: ['fr'], callingCode: '+681', lat: -13.7687, lon: -177.1561, isTerritory: true, parentCountry: 'FR' },
+  { code: 'PM', code3: 'SPM', name: 'Saint Pierre and Miquelon', flag: '🇵🇲', region: 'North America', defaultLanguage: 'fr', supportedLanguages: ['fr'], callingCode: '+508', lat: 46.8852, lon: -56.3159, isTerritory: true, parentCountry: 'FR' },
+  
+  // Australian Territories
+  { code: 'CX', code3: 'CXR', name: 'Christmas Island', flag: '🇨🇽', region: 'Asia', defaultLanguage: 'en-AU', supportedLanguages: ['en-AU'], callingCode: '+61', lat: -10.4475, lon: 105.6904, isTerritory: true, parentCountry: 'AU' },
+  { code: 'CC', code3: 'CCK', name: 'Cocos (Keeling) Islands', flag: '🇨🇨', region: 'Asia', defaultLanguage: 'en-AU', supportedLanguages: ['en-AU'], callingCode: '+61', lat: -12.1642, lon: 96.8710, isTerritory: true, parentCountry: 'AU' },
+  { code: 'NF', code3: 'NFK', name: 'Norfolk Island', flag: '🇳🇫', region: 'Oceania', defaultLanguage: 'en-AU', supportedLanguages: ['en-AU'], callingCode: '+672', lat: -29.0408, lon: 167.9547, isTerritory: true, parentCountry: 'AU' },
+  
+  // New Zealand Territories
+  { code: 'CK', code3: 'COK', name: 'Cook Islands', flag: '🇨🇰', region: 'Oceania', defaultLanguage: 'en-GB', supportedLanguages: ['en-GB'], callingCode: '+682', lat: -21.2367, lon: -159.7777, isTerritory: true, parentCountry: 'NZ' },
+  { code: 'NU', code3: 'NIU', name: 'Niue', flag: '🇳🇺', region: 'Oceania', defaultLanguage: 'en-GB', supportedLanguages: ['en-GB'], callingCode: '+683', lat: -19.0544, lon: -169.8672, isTerritory: true, parentCountry: 'NZ' },
+  { code: 'TK', code3: 'TKL', name: 'Tokelau', flag: '🇹🇰', region: 'Oceania', defaultLanguage: 'en-GB', supportedLanguages: ['en-GB'], callingCode: '+690', lat: -9.2002, lon: -171.8484, isTerritory: true, parentCountry: 'NZ' },
+];
+
+// Combined list of all countries (for map display, praying FOR)
+export const ALL_COUNTRIES: Country[] = [
+  ...IOS_SUPPORTED_COUNTRIES,
+  ...NO_STOREFRONT_COUNTRIES,
+  ...RESTRICTED_COUNTRIES,
+  ...TERRITORIES,
+];
+
+// Countries users can sign up from (excludes restricted)
+export const SIGNUP_COUNTRIES: Country[] = [
+  ...IOS_SUPPORTED_COUNTRIES,
+  ...NO_STOREFRONT_COUNTRIES,
+  ...TERRITORIES,
+];
+
 export const REGIONS = [
   'Africa',
   'Asia',
@@ -277,26 +381,55 @@ export const REGIONS = [
 export type Region = typeof REGIONS[number];
 
 export function getCountryByCode(code: string): Country | undefined {
-  return IOS_SUPPORTED_COUNTRIES.find(c => c.code === code || c.code3 === code);
+  return ALL_COUNTRIES.find(c => c.code === code || c.code3 === code);
 }
 
 export function getCountriesByRegion(region: Region): Country[] {
-  return IOS_SUPPORTED_COUNTRIES.filter(c => c.region === region);
+  return ALL_COUNTRIES.filter(c => c.region === region);
 }
 
 export function getCountriesByLanguage(languageCode: LanguageCode): Country[] {
-  return IOS_SUPPORTED_COUNTRIES.filter(c => 
+  return ALL_COUNTRIES.filter(c => 
     c.supportedLanguages.includes(languageCode) || c.defaultLanguage === languageCode
   );
 }
 
 export function searchCountries(query: string): Country[] {
   const lowerQuery = query.toLowerCase();
-  return IOS_SUPPORTED_COUNTRIES.filter(c => 
+  return ALL_COUNTRIES.filter(c => 
     c.name.toLowerCase().includes(lowerQuery) ||
     c.code.toLowerCase() === lowerQuery ||
     c.code3.toLowerCase() === lowerQuery
   );
+}
+
+export function searchSignupCountries(query: string): Country[] {
+  const lowerQuery = query.toLowerCase();
+  return SIGNUP_COUNTRIES.filter(c => 
+    c.name.toLowerCase().includes(lowerQuery) ||
+    c.code.toLowerCase() === lowerQuery ||
+    c.code3.toLowerCase() === lowerQuery
+  );
+}
+
+export function getRestrictedCountries(): Country[] {
+  return RESTRICTED_COUNTRIES;
+}
+
+export function isRestrictedCountry(code: string): boolean {
+  return RESTRICTED_COUNTRIES.some(c => c.code === code || c.code3 === code);
+}
+
+export function getTerritories(): Country[] {
+  return TERRITORIES;
+}
+
+export function isTerritory(code: string): boolean {
+  return TERRITORIES.some(c => c.code === code || c.code3 === code);
+}
+
+export function getTerritoriesByParent(parentCode: string): Country[] {
+  return TERRITORIES.filter(c => c.parentCountry === parentCode);
 }
 
 export function getLanguageByCode(code: LanguageCode): Language | undefined {

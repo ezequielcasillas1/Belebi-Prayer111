@@ -16,6 +16,7 @@ export interface Country {
   lat: number;
   lon: number;
   region: string;
+  isRestricted?: boolean;
 }
 
 export interface PrayerRequest {

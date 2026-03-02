@@ -1,11 +1,10 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { PrimaryButton, SecondaryButton } from '../../../components/Buttons';
-import { useAuthStore } from '../stores/authStore';
 import { RootStackParamList } from '../../../navigation/RootNavigator';
 import { colors, gradients } from '../../../theme/colors';
 
@@ -13,19 +12,6 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export default function WelcomeScreen() {
   const navigation = useNavigation<NavigationProp>();
-  const login = useAuthStore((state) => state.login);
-
-  const handleGuestLogin = () => {
-    login({
-      id: 'guest',
-      firstName: 'Guest',
-      country: 'Worldwide',
-      countryCode: 'WW',
-      flag: '🌍',
-      denomination: '',
-      email: '',
-    });
-  };
 
   return (
     <LinearGradient
@@ -81,16 +67,6 @@ export default function WelcomeScreen() {
             <SecondaryButton fullWidth size="lg" onPress={() => navigation.navigate('Verify')}>
               Sign In
             </SecondaryButton>
-
-            <View style={styles.orDivider}>
-              <View style={styles.orLine} />
-              <Text style={styles.orText}>or</Text>
-              <View style={styles.orLine} />
-            </View>
-
-            <TouchableOpacity onPress={handleGuestLogin}>
-              <Text style={styles.guestLink}>Skip — explore as guest</Text>
-            </TouchableOpacity>
 
             <Text style={styles.termsText}>
               By continuing, you agree to our Terms of Service and Privacy Policy
@@ -200,28 +176,6 @@ const styles = StyleSheet.create({
   actionSection: {
     width: '100%',
     gap: 12,
-  },
-  orDivider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 8,
-  },
-  orLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: colors.ui.border,
-  },
-  orText: {
-    marginHorizontal: 16,
-    fontSize: 13,
-    color: colors.text.muted,
-  },
-  guestLink: {
-    fontSize: 15,
-    color: colors.secondary.dark,
-    textAlign: 'center',
-    textDecorationLine: 'underline',
-    fontWeight: '500',
   },
   termsText: {
     fontSize: 12,

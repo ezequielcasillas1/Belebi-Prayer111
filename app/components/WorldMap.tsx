@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, Platform } from 'react-native';
 import MapView, { Marker, PROVIDER_DEFAULT } from 'react-native-maps';
+import { Lock } from 'lucide-react-native';
 import { Country } from '../data/mockData';
 import { colors } from '../theme/colors';
 
@@ -17,29 +18,36 @@ const INITIAL_REGION = {
 };
 
 const THRESHOLD_COLORS = {
+  none: '#94A3B8',     // Slate (0 requests - awaiting prayers)
   low: '#3B82F6',      // Blue (1-99)
   moderate: '#F59E0B', // Amber (100-999)
   high: '#F97316',     // Orange (1,000-9,999)
   veryHigh: '#EF4444', // Red (10,000+)
+  restricted: '#7C3AED', // Purple (restricted nations)
 };
 
-function getMarkerSize(count: number): number {
+function getMarkerSize(count: number, isRestricted?: boolean): number {
+  if (isRestricted) return 36;
   if (count >= 10000) return 44;
   if (count >= 1000) return 40;
   if (count >= 100) return 36;
-  return 32;
+  if (count > 0) return 32;
+  return 28;
 }
 
-function getMarkerColor(count: number): string {
+function getMarkerColor(count: number, isRestricted?: boolean): string {
+  if (isRestricted) return THRESHOLD_COLORS.restricted;
   if (count >= 10000) return THRESHOLD_COLORS.veryHigh;
   if (count >= 1000) return THRESHOLD_COLORS.high;
   if (count >= 100) return THRESHOLD_COLORS.moderate;
-  return THRESHOLD_COLORS.low;
+  if (count > 0) return THRESHOLD_COLORS.low;
+  return THRESHOLD_COLORS.none;
 }
 
 function formatCount(count: number): string {
   if (count >= 10000) return `${Math.floor(count / 1000)}K`;
   if (count >= 1000) return `${(count / 1000).toFixed(1)}K`;
+  if (count === 0) return '🙏';
   return count.toString();
 }
 
@@ -72,8 +80,9 @@ export default function WorldMap({ countries, onCountrySelect }: WorldMapProps) 
         mapPadding={{ top: 0, right: 0, bottom: 0, left: 0 }}
       >
         {uniqueCountries.map((country) => {
-          const size = getMarkerSize(country.activeRequests);
-          const bgColor = getMarkerColor(country.activeRequests);
+          const isRestricted = country.isRestricted ?? false;
+          const size = getMarkerSize(country.activeRequests, isRestricted);
+          const bgColor = getMarkerColor(country.activeRequests, isRestricted);
 
           return (
             <Marker
@@ -87,10 +96,14 @@ export default function WorldMap({ countries, onCountrySelect }: WorldMapProps) 
               tracksViewChanges={false}
             >
               <View style={[styles.markerOuter, { width: size, height: size }]}>
-                <View style={[styles.marker, { backgroundColor: bgColor }]}>
-                  <Text style={[styles.markerText, size >= 40 && styles.markerTextLarge]}>
-                    {formatCount(country.activeRequests)}
-                  </Text>
+                <View style={[styles.marker, { backgroundColor: bgColor }, isRestricted && styles.markerRestricted]}>
+                  {isRestricted ? (
+                    <Lock size={14} color="#FFFFFF" />
+                  ) : (
+                    <Text style={[styles.markerText, size >= 40 && styles.markerTextLarge]}>
+                      {formatCount(country.activeRequests)}
+                    </Text>
+                  )}
                 </View>
               </View>
             </Marker>
@@ -100,6 +113,10 @@ export default function WorldMap({ countries, onCountrySelect }: WorldMapProps) 
 
       <View style={styles.legend}>
         <View style={styles.legendRow}>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendDot, { backgroundColor: THRESHOLD_COLORS.none }]} />
+            <Text style={styles.legendLabel}>Awaiting</Text>
+          </View>
           <View style={styles.legendItem}>
             <View style={[styles.legendDot, { backgroundColor: THRESHOLD_COLORS.low }]} />
             <Text style={styles.legendLabel}>1-99</Text>
@@ -112,12 +129,18 @@ export default function WorldMap({ countries, onCountrySelect }: WorldMapProps) 
             <View style={[styles.legendDot, { backgroundColor: THRESHOLD_COLORS.high }]} />
             <Text style={styles.legendLabel}>1K+</Text>
           </View>
+        </View>
+        <View style={[styles.legendRow, styles.legendRowSecond]}>
           <View style={styles.legendItem}>
             <View style={[styles.legendDot, { backgroundColor: THRESHOLD_COLORS.veryHigh }]} />
             <Text style={styles.legendLabel}>10K+</Text>
           </View>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendDot, { backgroundColor: THRESHOLD_COLORS.restricted }]} />
+            <Text style={styles.legendLabel}>Restricted</Text>
+          </View>
         </View>
-        <Text style={styles.legendHint}>Tap a marker to pray for that country</Text>
+        <Text style={styles.legendHint}>Tap any marker to pray for that country</Text>
       </View>
     </View>
   );
@@ -158,6 +181,10 @@ const styles = StyleSheet.create({
       },
     }),
   },
+  markerRestricted: {
+    borderStyle: 'dashed',
+    borderColor: 'rgba(255, 255, 255, 0.8)',
+  },
   markerText: {
     fontSize: 11,
     fontWeight: '700',
@@ -179,6 +206,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 16,
+  },
+  legendRowSecond: {
+    marginTop: 8,
   },
   legendItem: {
     flexDirection: 'row',

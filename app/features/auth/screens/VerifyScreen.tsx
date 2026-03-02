@@ -1,149 +1,71 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ArrowLeft, ShieldCheck, Mail, Phone } from 'lucide-react-native';
+import { ArrowLeft, ShieldCheck, Mail, Lock } from 'lucide-react-native';
 import { PrimaryButton } from '../../../components/Buttons';
+import { useAuthStore } from '../stores/authStore';
+import { useUIStore } from '../../../stores/uiStore';
 import { RootStackParamList } from '../../../navigation/RootNavigator';
+import { supabase } from '../../../lib/supabase';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
-type Step = 'email' | 'otp-email' | 'phone' | 'otp-phone';
-
-const STEPS: Step[] = ['email', 'otp-email', 'phone', 'otp-phone'];
-const STEP_LABELS: Record<Step, string> = {
-  email: 'Enter your email',
-  'otp-email': 'Verify your email',
-  phone: 'Enter your phone number',
-  'otp-phone': 'Verify your phone',
-};
 
 export default function VerifyScreen() {
   const navigation = useNavigation<NavigationProp>();
-  const [currentStep, setCurrentStep] = useState<Step>('email');
+  const login = useAuthStore((state) => state.login);
+  const showToast = useUIStore((state) => state.showToast);
+
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const otpRefs = useRef<(TextInput | null)[]>([]);
-
-  const stepIndex = STEPS.indexOf(currentStep);
-  const progress = ((stepIndex + 1) / 4) * 100;
+  const isValidEmail = email.includes('@') && email.includes('.');
+  const isValidPassword = password.length >= 6;
+  const isValid = isValidEmail && isValidPassword;
 
   const handleBack = () => {
-    if (stepIndex === 0) {
-      navigation.goBack();
-    } else {
-      setCurrentStep(STEPS[stepIndex - 1]);
-      setOtp(['', '', '', '', '', '']);
-    }
+    navigation.goBack();
   };
 
-  const handleOtpChange = (value: string, index: number) => {
-    if (value.length > 1) value = value[0];
-    const newOtp = [...otp];
-    newOtp[index] = value;
-    setOtp(newOtp);
+  const handleSignIn = async () => {
+    if (!isValid) return;
 
-    if (value && index < 5) {
-      otpRefs.current[index + 1]?.focus();
-    }
-  };
-
-  const handleOtpKeyPress = (key: string, index: number) => {
-    if (key === 'Backspace' && !otp[index] && index > 0) {
-      otpRefs.current[index - 1]?.focus();
-    }
-  };
-
-  const handleContinue = async () => {
     setLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    setLoading(false);
 
-    if (stepIndex < 3) {
-      setCurrentStep(STEPS[stepIndex + 1]);
-      setOtp(['', '', '', '', '', '']);
-    } else {
-      navigation.navigate('Setup');
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+
+      if (error) {
+        showToast('error', error.message);
+        setLoading(false);
+        return;
+      }
+
+      if (data.user) {
+        const metadata = data.user.user_metadata;
+        
+        login({
+          id: data.user.id,
+          firstName: metadata?.first_name || 'User',
+          country: metadata?.country || 'Unknown',
+          countryCode: metadata?.country_code || 'XX',
+          flag: metadata?.flag || '🌍',
+          denomination: metadata?.denomination || 'Prefer not to say',
+          email: data.user.email || '',
+        });
+
+        showToast('success', 'Welcome back!');
+      }
+    } catch (err) {
+      showToast('error', 'An unexpected error occurred');
+    } finally {
+      setLoading(false);
     }
-  };
-
-  const handleResendCode = () => {
-    setOtp(['', '', '', '', '', '']);
-  };
-
-  const isValid = () => {
-    if (currentStep === 'email') return email.includes('@') && email.includes('.');
-    if (currentStep === 'phone') return phone.length >= 10;
-    if (currentStep === 'otp-email' || currentStep === 'otp-phone') {
-      return otp.every((digit) => digit !== '');
-    }
-    return false;
-  };
-
-  const renderStepContent = () => {
-    if (currentStep === 'email') {
-      return (
-        <View style={styles.inputContainer}>
-          <View style={styles.inputWrapper}>
-            <Mail size={20} color="#6B4F3E" style={styles.inputIcon} />
-            <TextInput
-              style={styles.textInput}
-              placeholder="your@email.com"
-              placeholderTextColor="#9B7B6A"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-          </View>
-        </View>
-      );
-    }
-
-    if (currentStep === 'phone') {
-      return (
-        <View style={styles.inputContainer}>
-          <View style={styles.inputWrapper}>
-            <Phone size={20} color="#6B4F3E" style={styles.inputIcon} />
-            <TextInput
-              style={styles.textInput}
-              placeholder="+1 (555) 123-4567"
-              placeholderTextColor="#9B7B6A"
-              value={phone}
-              onChangeText={setPhone}
-              keyboardType="phone-pad"
-            />
-          </View>
-        </View>
-      );
-    }
-
-    return (
-      <View style={styles.otpContainer}>
-        <View style={styles.otpRow}>
-          {otp.map((digit, index) => (
-            <TextInput
-              key={index}
-              ref={(ref) => (otpRefs.current[index] = ref)}
-              style={[styles.otpInput, digit && styles.otpInputFilled]}
-              value={digit}
-              onChangeText={(value) => handleOtpChange(value, index)}
-              onKeyPress={({ nativeEvent }) => handleOtpKeyPress(nativeEvent.key, index)}
-              keyboardType="number-pad"
-              maxLength={1}
-              selectTextOnFocus
-            />
-          ))}
-        </View>
-        <TouchableOpacity onPress={handleResendCode} style={styles.resendButton}>
-          <Text style={styles.resendText}>Resend code</Text>
-        </TouchableOpacity>
-      </View>
-    );
   };
 
   return (
@@ -154,28 +76,61 @@ export default function VerifyScreen() {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.progressBar}>
-        <View style={[styles.progressFill, { width: `${progress}%` }]} />
-      </View>
-
       <View style={styles.content}>
         <View style={styles.iconContainer}>
           <ShieldCheck size={32} color="#6B4F3E" />
         </View>
 
-        <Text style={styles.stepCounter}>Step {stepIndex + 1} of 4</Text>
-        <Text style={styles.stepLabel}>{STEP_LABELS[currentStep]}</Text>
+        <Text style={styles.title}>Welcome Back</Text>
+        <Text style={styles.subtitle}>Sign in to continue praying</Text>
         <Text style={styles.privacyNote}>
           Your information is securely encrypted and never shared.
         </Text>
 
-        {renderStepContent()}
+        <View style={styles.form}>
+          <View style={styles.inputContainer}>
+            <View style={styles.inputWrapper}>
+              <Mail size={20} color="#6B4F3E" style={styles.inputIcon} />
+              <TextInput
+                style={styles.textInput}
+                placeholder="your@email.com"
+                placeholderTextColor="#9B7B6A"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            </View>
+          </View>
+
+          <View style={styles.inputContainer}>
+            <View style={styles.inputWrapper}>
+              <Lock size={20} color="#6B4F3E" style={styles.inputIcon} />
+              <TextInput
+                style={styles.textInput}
+                placeholder="Password"
+                placeholderTextColor="#9B7B6A"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+                autoCapitalize="none"
+              />
+            </View>
+          </View>
+        </View>
 
         <View style={styles.buttonContainer}>
-          <PrimaryButton fullWidth size="lg" onPress={handleContinue} disabled={!isValid()} loading={loading}>
-            {stepIndex === 3 ? 'Complete Verification' : 'Continue'}
+          <PrimaryButton fullWidth size="lg" onPress={handleSignIn} disabled={!isValid} loading={loading}>
+            Sign In
           </PrimaryButton>
         </View>
+
+        <TouchableOpacity onPress={() => navigation.navigate('Setup')} style={styles.createAccountLink}>
+          <Text style={styles.createAccountText}>
+            Don't have an account? <Text style={styles.createAccountTextBold}>Create one</Text>
+          </Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -198,18 +153,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  progressBar: {
-    height: 4,
-    backgroundColor: 'rgba(107, 79, 62, 0.1)',
-    marginHorizontal: 24,
-    borderRadius: 2,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#6B4F3E',
-    borderRadius: 2,
-  },
   content: {
     flex: 1,
     paddingHorizontal: 24,
@@ -225,23 +168,26 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 20,
   },
-  stepCounter: {
-    fontSize: 13,
-    color: '#7A5C4A',
-    fontWeight: '500',
-  },
-  stepLabel: {
-    fontSize: 22,
+  title: {
+    fontSize: 26,
     fontWeight: '700',
     color: '#1C0F0A',
-    marginTop: 8,
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#5C3D2E',
     marginBottom: 8,
   },
   privacyNote: {
-    fontSize: 14,
-    color: '#5C3D2E',
+    fontSize: 13,
+    color: '#7A5C4A',
     textAlign: 'center',
     marginBottom: 32,
+  },
+  form: {
+    width: '100%',
+    gap: 16,
   },
   inputContainer: {
     width: '100%',
@@ -264,42 +210,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#1C0F0A',
   },
-  otpContainer: {
-    width: '100%',
-    alignItems: 'center',
-  },
-  otpRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 10,
-  },
-  otpInput: {
-    width: 46,
-    height: 56,
-    borderWidth: 1,
-    borderColor: '#D4C4B0',
-    borderRadius: 12,
-    backgroundColor: '#FDF9F4',
-    fontSize: 24,
-    fontWeight: '600',
-    textAlign: 'center',
-    color: '#1C0F0A',
-  },
-  otpInputFilled: {
-    borderColor: '#6B4F3E',
-    backgroundColor: 'rgba(107, 79, 62, 0.05)',
-  },
-  resendButton: {
-    marginTop: 20,
-  },
-  resendText: {
-    fontSize: 14,
-    color: '#6B4F3E',
-    fontWeight: '500',
-    textDecorationLine: 'underline',
-  },
   buttonContainer: {
     width: '100%',
-    marginTop: 40,
+    marginTop: 32,
+  },
+  createAccountLink: {
+    marginTop: 24,
+  },
+  createAccountText: {
+    fontSize: 14,
+    color: '#5C3D2E',
+  },
+  createAccountTextBold: {
+    fontWeight: '600',
+    color: '#6B4F3E',
   },
 });

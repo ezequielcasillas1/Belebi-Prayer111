@@ -5,10 +5,11 @@
 **Files:** countries.ts, HomeScreen.tsx
 **Result:** Added lat/lon coordinates to Country interface. All 175 iOS-supported countries now have geographic coordinates for map display. Removed duplicate COUNTRY_COORDINATES lookup - single source of truth.
 
-### 2026-03-01 - Phase 2: React Query Integration
+### 2026-03-02 - Phase 2: React Query Integration
 **Status:** SUCCESS ✅
+**Commit:** cc5210a → BP.0.1
 **Files:** queryClient.ts, QueryProvider.tsx, AppProviders.tsx, prayerApi.ts, usePrayerQueries.ts, useChurchQueries.ts, useProfileQueries.ts, HomeScreen.tsx, PrayerListScreen.tsx, ChurchListScreen.tsx, CreateRequestScreen.tsx, 003_global_prayers.sql
-**Result:** React Query setup with offline-first persistence. Created query/mutation hooks for prayers, churches, and profiles with optimistic updates and caching. Updated key screens to use React Query for data fetching.
+**Result:** React Query setup with offline-first persistence. Query/mutation hooks for prayers, churches, profiles. Pushed to BP.0.1.
 
 ### 2026-03-02 - AI Removal + Church Communities Feature
 **Status:** SUCCESS ✅

@@ -3,23 +3,26 @@ import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity, Modal 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ArrowLeft, ChevronDown, Check } from 'lucide-react-native';
+import { ArrowLeft, ChevronDown, Check, Mail, Lock } from 'lucide-react-native';
 import { PrimaryButton } from '../../../components/Buttons';
 import { useAuthStore } from '../stores/authStore';
 import { useUIStore } from '../../../stores/uiStore';
-import { UNIQUE_COUNTRIES } from '../../../data/mockData';
+import { SIGNUP_COUNTRIES } from '../../../config/countries';
 import { DENOMINATIONS } from '../../../config/constants';
 import { RootStackParamList } from '../../../navigation/RootNavigator';
+import { supabase } from '../../../lib/supabase';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
-const sortedCountries = [...UNIQUE_COUNTRIES].sort((a, b) => a.name.localeCompare(b.name));
+const sortedCountries = [...SIGNUP_COUNTRIES].sort((a, b) => a.name.localeCompare(b.name));
 
 export default function SetupScreen() {
   const navigation = useNavigation<NavigationProp>();
   const login = useAuthStore((state) => state.login);
   const showToast = useUIStore((state) => state.showToast);
 
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [selectedCountry, setSelectedCountry] = useState<typeof sortedCountries[0] | null>(null);
   const [selectedDenomination, setSelectedDenomination] = useState('');
@@ -27,25 +30,54 @@ export default function SetupScreen() {
   const [showCountryPicker, setShowCountryPicker] = useState(false);
   const [showDenominationPicker, setShowDenominationPicker] = useState(false);
 
-  const isValid = firstName.trim().length > 0 && selectedCountry !== null;
+  const isValidEmail = email.includes('@') && email.includes('.');
+  const isValidPassword = password.length >= 6;
+  const isValid = isValidEmail && isValidPassword && firstName.trim().length > 0 && selectedCountry !== null;
 
   const handleSubmit = async () => {
     if (!isValid || !selectedCountry) return;
 
     setLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 600));
+    
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: email.trim(),
+        password,
+        options: {
+          data: {
+            first_name: firstName.trim(),
+            country: selectedCountry.name,
+            country_code: selectedCountry.code,
+            flag: selectedCountry.flag,
+            denomination: selectedDenomination || 'Prefer not to say',
+          },
+        },
+      });
 
-    login({
-      id: `user_${Date.now()}`,
-      firstName: firstName.trim(),
-      country: selectedCountry.name,
-      countryCode: selectedCountry.code,
-      flag: selectedCountry.flag,
-      denomination: selectedDenomination || 'Prefer not to say',
-      email: '',
-    });
+      if (error) {
+        showToast('error', error.message);
+        setLoading(false);
+        return;
+      }
 
-    showToast('success', 'Welcome to Belebi Prayer!');
+      if (data.user) {
+        login({
+          id: data.user.id,
+          firstName: firstName.trim(),
+          country: selectedCountry.name,
+          countryCode: selectedCountry.code,
+          flag: selectedCountry.flag,
+          denomination: selectedDenomination || 'Prefer not to say',
+          email: email.trim(),
+        });
+
+        showToast('success', 'Welcome to Belebi Prayer!');
+      }
+    } catch (err) {
+      showToast('error', 'An unexpected error occurred');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const renderPicker = (
@@ -110,6 +142,39 @@ export default function SetupScreen() {
         </View>
 
         <View style={styles.form}>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Email *</Text>
+            <View style={styles.inputWrapper}>
+              <Mail size={20} color="#6B4F3E" style={styles.inputIcon} />
+              <TextInput
+                style={styles.textInputWithIcon}
+                placeholder="your@email.com"
+                placeholderTextColor="#9B7B6A"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            </View>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Password *</Text>
+            <View style={styles.inputWrapper}>
+              <Lock size={20} color="#6B4F3E" style={styles.inputIcon} />
+              <TextInput
+                style={styles.textInputWithIcon}
+                placeholder="At least 6 characters"
+                placeholderTextColor="#9B7B6A"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+                autoCapitalize="none"
+              />
+            </View>
+          </View>
+
           <View style={styles.inputGroup}>
             <Text style={styles.label}>First Name *</Text>
             <TextInput
@@ -251,6 +316,24 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#1C0F0A',
     backgroundColor: '#FDF9F4',
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FDF9F4',
+    borderWidth: 1,
+    borderColor: '#D4C4B0',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    height: 52,
+  },
+  inputIcon: {
+    marginRight: 12,
+  },
+  textInputWithIcon: {
+    flex: 1,
+    fontSize: 16,
+    color: '#1C0F0A',
   },
   selectButton: {
     height: 52,

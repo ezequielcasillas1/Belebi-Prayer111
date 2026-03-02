@@ -11,7 +11,7 @@ import { PrimaryButton } from '../../../components/Buttons';
 import { useAuthStore } from '../../auth/stores/authStore';
 import { usePlanStore } from '../../planning/stores/planStore';
 import { useCountryStats } from '../hooks/usePrayerQueries';
-import { IOS_SUPPORTED_COUNTRIES, Country as ConfigCountry } from '../../../config/countries';
+import { ALL_COUNTRIES, Country as ConfigCountry } from '../../../config/countries';
 import { Country, UNIQUE_COUNTRIES as MOCK_COUNTRIES } from '../../../data/mockData';
 import { RootStackParamList } from '../../../navigation/RootNavigator';
 import { colors } from '../../../theme/colors';
@@ -32,52 +32,24 @@ export default function HomeScreen() {
       (countryStats || []).map(s => [s.countryCode, s.activeRequests])
     );
 
-    const mockStats: Record<string, number> = {
-      NG: 15847,  // 10K+ (Red) - High need
-      UA: 12340,  // 10K+ (Red)
-      IN: 8921,   // 1K+ (Orange)
-      PH: 5234,   // 1K+ (Orange)
-      BR: 3156,   // 1K+ (Orange)
-      KE: 2847,   // 1K+ (Orange)
-      US: 1205,   // 1K+ (Orange)
-      GB: 892,    // 100+ (Amber)
-      ZA: 567,    // 100+ (Amber)
-      MX: 423,    // 100+ (Amber)
-      DE: 312,    // 100+ (Amber)
-      ID: 256,    // 100+ (Amber)
-      AU: 189,    // 100+ (Amber)
-      PL: 145,    // 100+ (Amber)
-      CA: 134,    // 100+ (Amber)
-      GH: 78,     // 1-99 (Blue)
-      JP: 56,     // 1-99 (Blue)
-      KR: 43,     // 1-99 (Blue)
-      EG: 34,     // 1-99 (Blue)
-      AR: 28,     // 1-99 (Blue)
-      FR: 19,     // 1-99 (Blue)
-      IT: 12,     // 1-99 (Blue)
-      CL: 8,      // 1-99 (Blue)
-      CO: 5,      // 1-99 (Blue)
-    };
-
-    return IOS_SUPPORTED_COUNTRIES
-      .map(country => {
-        const apiRequests = statsMap.get(country.code);
-        const mockRequests = mockStats[country.code];
-        const activeRequests = apiRequests ?? mockRequests ?? 0;
-        
-        return {
-          code: country.code,
-          name: country.name,
-          flag: country.flag,
-          region: country.region,
-          activeRequests,
-          lat: country.lat,
-          lon: country.lon,
-        };
-      })
-      .filter(c => c.activeRequests > 0 || searchQuery)
+    return ALL_COUNTRIES
+      .map(country => ({
+        code: country.code,
+        name: country.name,
+        flag: country.flag,
+        region: country.region,
+        activeRequests: statsMap.get(country.code) ?? 0,
+        lat: country.lat,
+        lon: country.lon,
+        isRestricted: country.isRestricted ?? false,
+      }))
       .filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase()))
-      .sort((a, b) => b.activeRequests - a.activeRequests);
+      .sort((a, b) => {
+        if (a.isRestricted && !b.isRestricted) return 1;
+        if (!a.isRestricted && b.isRestricted) return -1;
+        if (a.activeRequests !== b.activeRequests) return b.activeRequests - a.activeRequests;
+        return a.name.localeCompare(b.name);
+      });
   }, [countryStats, searchQuery]);
 
   const openDrawer = () => {
