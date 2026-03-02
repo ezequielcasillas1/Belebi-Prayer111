@@ -1,17 +1,17 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { CheckCircle, XCircle, Info, X } from 'lucide-react-native';
-import { useAppContext } from '../context/AppContext';
+import { useUIStore } from '../stores/uiStore';
 import { colors as themeColors } from '../theme/colors';
 
 export default function ToastContainer() {
-  const { state } = useAppContext();
+  const toasts = useUIStore((state) => state.toasts);
 
-  if (state.toasts.length === 0) return null;
+  if (toasts.length === 0) return null;
 
   return (
     <View style={styles.container} pointerEvents="box-none">
-      {state.toasts.map((toast) => {
+      {toasts.map((toast) => {
         const Icon = toast.type === 'success' ? CheckCircle : toast.type === 'error' ? XCircle : Info;
         const colors = {
           success: { bg: themeColors.success.bg, border: themeColors.success.border, text: themeColors.success.text, icon: themeColors.success.text },

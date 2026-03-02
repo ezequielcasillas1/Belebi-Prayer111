@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, Pressable, ScrollView } from 'react-native';
 import { Flag, X, AlertTriangle } from 'lucide-react-native';
-import { useAppContext } from '../context/AppContext';
+import { useUIStore } from '../stores/uiStore';
 
 interface ReportModalProps {
   isOpen: boolean;
@@ -21,7 +21,7 @@ const REPORT_REASONS = [
 ];
 
 export default function ReportModal({ isOpen, onClose, targetType, targetName }: ReportModalProps) {
-  const { showToast } = useAppContext();
+  const showToast = useUIStore((state) => state.showToast);
 
   const handleReport = (reason: string) => {
     showToast('success', 'Report submitted. Thank you for helping keep our community safe.');

@@ -1,4 +1,13 @@
-// Interfaces
+/**
+ * LEGACY MOCK DATA
+ * For comprehensive iOS countries with language support, use:
+ * import { IOS_SUPPORTED_COUNTRIES } from '../config/countries';
+ * 
+ * For translation services, use:
+ * import { translationService } from '../services/translation';
+ */
+
+// Legacy Interfaces (for backward compatibility during migration)
 export interface Country {
   code: string;
   name: string;
@@ -769,18 +778,4 @@ export const DENOMINATIONS = [
   'Protestant',
   'Reformed',
   'Other',
-];
-
-// AI Prayer Drafts for submitting prayers
-export const AI_PRAYER_DRAFTS = [
-  "Heavenly Father, I come before you on behalf of this dear soul who has reached out for prayer. You know their heart, their struggles, and their deepest needs. I ask that you would wrap them in your loving arms and give them the strength they need for this journey. May they feel your presence and know that they are never alone. In Jesus' name, Amen.",
-  "Lord God, thank you for hearing the cry of your children. I lift up this precious person to you today, asking that you would move mightily in their situation. Grant them peace that surpasses understanding, hope that does not disappoint, and faith that can move mountains. May they experience your goodness and grace in abundance. Amen.",
-  "Gracious God, I lift this precious soul to you today, knowing that you care deeply for each of your children. I pray that you would meet them right where they are and provide exactly what they need. Give them courage for today and hope for tomorrow. May your light shine brightly in their life, guiding their every step. In your holy name, Amen.",
-];
-
-// AI Prayer Drafts for creating requests
-export const AI_REQUEST_DRAFTS = [
-  "Father, I come before you with an open heart, seeking your guidance and provision. You know my needs before I even speak them. I trust in your perfect timing and your faithful love. Help me to rest in your promises and to walk in faith, knowing that you are working all things together for my good. May your will be done in my life.",
-  "Lord God, you are the same yesterday, today, and forever. I bring my burdens to you, knowing that you invite me to cast all my cares upon you. Strengthen my faith in this season and help me to see your hand at work. I thank you in advance for how you will answer this prayer according to your perfect wisdom.",
-  "Gracious God, I reach out to my brothers and sisters in Christ, asking them to join me in prayer. You have promised that where two or three gather in your name, you are there. I believe that you hear our prayers and that you are able to do immeasurably more than we ask or imagine. I place my trust in you alone.",
 ];

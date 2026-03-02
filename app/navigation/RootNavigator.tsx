@@ -4,38 +4,32 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 
-import { useAppContext } from '../context/AppContext';
+import { useAuthStore } from '../features/auth/stores/authStore';
 import DrawerNav from '../components/DrawerNav';
 
-import WelcomeScreen from '../screens/WelcomeScreen';
-import SetupScreen from '../screens/SetupScreen';
-import VerifyScreen from '../screens/VerifyScreen';
-import HomeScreen from '../screens/HomeScreen';
-import DirectoryScreen from '../screens/DirectoryScreen';
-import PrayForNationScreen from '../screens/PrayForNationScreen';
-import AutoModeScreen from '../screens/AutoModeScreen';
-import PrayerProfileScreen from '../screens/PrayerProfileScreen';
-import CountryDetailScreen from '../screens/CountryDetailScreen';
-import LivePrayerRoomScreen from '../screens/LivePrayerRoomScreen';
-import PlanPrayerScreen from '../screens/PlanPrayerScreen';
-import PrayerListScreen from '../screens/PrayerListScreen';
-import PrayersSentScreen from '../screens/PrayersSentScreen';
-import CreateRequestScreen from '../screens/CreateRequestScreen';
-import SettingsScreen from '../screens/SettingsScreen';
-import HelpSafetyScreen from '../screens/HelpSafetyScreen';
+import { WelcomeScreen, SetupScreen, VerifyScreen } from '../features/auth';
+import { HomeScreen, PrayerListScreen, PrayerProfileScreen, PrayersSentScreen, CreateRequestScreen } from '../features/prayers';
+import { DirectoryScreen, PrayForNationScreen, CountryDetailScreen, LivePrayerRoomScreen } from '../features/nations';
+import { AutoModeScreen, PlanPrayerScreen } from '../features/planning';
+import { SettingsScreen, HelpSafetyScreen } from '../features/settings';
+import { ChurchListScreen, ChurchDetailScreen, JoinChurchScreen, CreateChurchScreen, ChurchSettingsScreen } from '../features/churches';
 
 export type RootStackParamList = {
   Welcome: undefined;
   Setup: undefined;
   Verify: undefined;
   MainDrawer: undefined;
-  // Detail/modal screens outside the drawer
   Directory: { countryCode?: string } | undefined;
   PrayForNation: { countryCode: string };
   AutoMode: undefined;
   PrayerProfile: { requestId: string };
   CountryDetail: { countryCode: string };
   LivePrayerRoom: { countryCode: string };
+  ChurchList: undefined;
+  ChurchDetail: { churchId: string };
+  JoinChurch: undefined;
+  CreateChurch: undefined;
+  ChurchSettings: { churchId: string };
 };
 
 export type DrawerParamList = {
@@ -54,6 +48,7 @@ const Drawer = createDrawerNavigator<DrawerParamList>();
 function MainDrawer() {
   return (
     <Drawer.Navigator
+      id="MainDrawer"
       drawerContent={(props) => <DrawerNav {...props} />}
       screenOptions={{
         headerShown: false,
@@ -75,9 +70,10 @@ function MainDrawer() {
 }
 
 export default function RootNavigator() {
-  const { state } = useAppContext();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const isLoading = useAuthStore((state) => state.isLoading);
 
-  if (state.isLoading) {
+  if (isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FDF9F4' }}>
         <ActivityIndicator size="large" color="#6B4F3E" />
@@ -87,8 +83,8 @@ export default function RootNavigator() {
 
   return (
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {!state.isAuthenticated ? (
+      <Stack.Navigator id="RootStack" screenOptions={{ headerShown: false }}>
+        {!isAuthenticated ? (
           <>
             <Stack.Screen name="Welcome" component={WelcomeScreen} />
             <Stack.Screen name="Setup" component={SetupScreen} />
@@ -97,13 +93,17 @@ export default function RootNavigator() {
         ) : (
           <>
             <Stack.Screen name="MainDrawer" component={MainDrawer} />
-            {/* Detail/modal screens that need to be outside the drawer */}
             <Stack.Screen name="Directory" component={DirectoryScreen} />
             <Stack.Screen name="PrayForNation" component={PrayForNationScreen} />
             <Stack.Screen name="AutoMode" component={AutoModeScreen} />
             <Stack.Screen name="PrayerProfile" component={PrayerProfileScreen} />
             <Stack.Screen name="CountryDetail" component={CountryDetailScreen} />
             <Stack.Screen name="LivePrayerRoom" component={LivePrayerRoomScreen} />
+            <Stack.Screen name="ChurchList" component={ChurchListScreen} />
+            <Stack.Screen name="ChurchDetail" component={ChurchDetailScreen} />
+            <Stack.Screen name="JoinChurch" component={JoinChurchScreen} />
+            <Stack.Screen name="CreateChurch" component={CreateChurchScreen} />
+            <Stack.Screen name="ChurchSettings" component={ChurchSettingsScreen} />
           </>
         )}
       </Stack.Navigator>

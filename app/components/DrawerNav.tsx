@@ -3,8 +3,9 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { DrawerContentComponentProps } from '@react-navigation/drawer';
 import { useNavigation } from '@react-navigation/native';
-import { Home, Users, BookmarkPlus, Send, PlusCircle, Settings, HelpCircle, LogOut, User } from 'lucide-react-native';
-import { useAppContext } from '../context/AppContext';
+import { Home, Users, BookmarkPlus, Send, PlusCircle, Settings, HelpCircle, LogOut, User, Church } from 'lucide-react-native';
+import { useAuthStore } from '../features/auth/stores/authStore';
+import { usePlanStore } from '../features/planning/stores/planStore';
 import Badge from './Badge';
 import { colors } from '../theme/colors';
 
@@ -14,18 +15,25 @@ const navItems = [
   { key: 'PlanPrayerDrawer', label: 'Plan Prayer', icon: BookmarkPlus },
   { key: 'PrayersSentDrawer', label: 'Prayers Sent', icon: Send },
   { key: 'CreateRequestDrawer', label: 'Ask for Prayer', icon: PlusCircle },
+  { key: 'ChurchList', label: 'My Churches', icon: Church, isStackScreen: true },
   { key: 'SettingsDrawer', label: 'Settings', icon: Settings },
   { key: 'HelpSafetyDrawer', label: 'Help & Safety', icon: HelpCircle },
 ];
 
 export default function DrawerNav(props: DrawerContentComponentProps) {
   const navigation = useNavigation();
-  const { state: appState, logout } = useAppContext();
+  const currentUser = useAuthStore((state) => state.currentUser);
+  const logout = useAuthStore((state) => state.logout);
+  const selectionMode = usePlanStore((state) => state.selectionMode);
   const currentRoute = props.state.routeNames[props.state.index];
 
-  const handleNavigation = (drawerKey: string) => {
+  const handleNavigation = (key: string, isStackScreen?: boolean) => {
     props.navigation.closeDrawer();
-    props.navigation.navigate(drawerKey);
+    if (isStackScreen) {
+      (props.navigation as any).navigate(key);
+    } else {
+      props.navigation.navigate(key);
+    }
   };
 
   const handleLogout = () => {
@@ -35,7 +43,7 @@ export default function DrawerNav(props: DrawerContentComponentProps) {
     logout();
   };
 
-  const isGuest = appState.currentUser?.id === 'guest';
+  const isGuest = currentUser?.id === 'guest';
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
@@ -50,23 +58,23 @@ export default function DrawerNav(props: DrawerContentComponentProps) {
 
         <View style={styles.userInfo}>
           <View style={styles.userAvatar}>
-            <Text style={styles.userFlag}>{appState.currentUser?.flag || '🌍'}</Text>
+            <Text style={styles.userFlag}>{currentUser?.flag || '🌍'}</Text>
           </View>
           <View style={styles.userDetails}>
             <View style={styles.userNameRow}>
-              <Text style={styles.userName}>{appState.currentUser?.firstName || 'User'}</Text>
+              <Text style={styles.userName}>{currentUser?.firstName || 'User'}</Text>
               {isGuest && <Badge variant="info" size="sm">Guest</Badge>}
             </View>
-            <Text style={styles.userCountry}>{appState.currentUser?.country || 'Worldwide'}</Text>
+            <Text style={styles.userCountry}>{currentUser?.country || 'Worldwide'}</Text>
           </View>
         </View>
 
         <View style={styles.modeIndicator}>
           <View
-            style={[styles.modeDot, { backgroundColor: appState.selectionMode === 'auto' ? '#22C55E' : '#9CA3AF' }]}
+            style={[styles.modeDot, { backgroundColor: selectionMode === 'auto' ? '#22C55E' : '#9CA3AF' }]}
           />
           <Text style={styles.modeText}>
-            {appState.selectionMode === 'auto' ? 'Auto Mode' : 'Manual Mode'}
+            {selectionMode === 'auto' ? 'Auto Mode' : 'Manual Mode'}
           </Text>
         </View>
       </View>
@@ -80,7 +88,7 @@ export default function DrawerNav(props: DrawerContentComponentProps) {
             <TouchableOpacity
               key={item.key}
               style={[styles.navItem, isActive && styles.navItemActive]}
-              onPress={() => handleNavigation(item.key)}
+              onPress={() => handleNavigation(item.key, (item as any).isStackScreen)}
               activeOpacity={0.7}
             >
               <View style={[styles.navIconBox, isActive && styles.navIconBoxActive]}>

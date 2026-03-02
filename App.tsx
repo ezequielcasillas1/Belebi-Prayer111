@@ -3,7 +3,7 @@ import './global.css';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { AppProvider } from './app/context/AppContext';
+import { AppProviders } from './app/providers';
 import RootNavigator from './app/navigation/RootNavigator';
 import ToastContainer from './app/components/ToastContainer';
 import { View, StyleSheet, LogBox } from 'react-native';
@@ -24,13 +24,13 @@ export default function App() {
   return (
     <GestureHandlerRootView style={styles.container}>
       <SafeAreaProvider>
-        <AppProvider>
+        <AppProviders>
           <View style={styles.container}>
             <StatusBar style="dark" />
             <RootNavigator />
             <ToastContainer />
           </View>
-        </AppProvider>
+        </AppProviders>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
