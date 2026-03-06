@@ -78,6 +78,13 @@ export const colors = {
     emergency: { bg: '#FEE2E2', border: '#FECACA', text: '#7A1E1E' },
     country: { bg: '#EFF6FF', border: '#BFDBFE', text: '#1E40AF' },
   },
+
+  // Accent colors
+  accent: {
+    blue: '#3B82F6',
+    purple: '#8B5CF6',
+    teal: '#14B8A6',
+  },
 };
 
 // Gradient configurations for expo-linear-gradient

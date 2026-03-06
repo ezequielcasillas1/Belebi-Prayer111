@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ChevronRight, MapPin, AlertTriangle } from 'lucide-react-native';
 import Badge from './Badge';
+import TranslatedText from './TranslatedText';
 import { PrayerRequest } from '../data/mockData';
 import { RootStackParamList } from '../navigation/RootNavigator';
 import { colors } from '../theme/colors';
@@ -74,9 +75,14 @@ export default function PrayerRequestCard({
         </View>
 
         {showSnippet && !compact && (
-          <Text style={styles.snippet} numberOfLines={2}>
-            {request.requestText}
-          </Text>
+          <TranslatedText
+            text={request.requestText}
+            contentId={request.id}
+            numberOfLines={2}
+            style={styles.snippet}
+            showOriginalToggle={false}
+            forceTranslate={true}
+          />
         )}
       </View>
 

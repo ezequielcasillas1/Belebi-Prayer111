@@ -75,6 +75,13 @@ export default function ChurchListScreen() {
             >
               Join a Church
             </PrimaryButton>
+            <SecondaryButton
+              fullWidth
+              icon={<Church size={18} color="#6B4F3E" />}
+              onPress={() => navigation.navigate('CreateChurch')}
+            >
+              Create a Church
+            </SecondaryButton>
           </View>
         </View>
       </View>
@@ -97,9 +104,16 @@ export default function ChurchListScreen() {
             <SecondaryButton
               size="sm"
               icon={<Plus size={16} color="#6B4F3E" />}
+              onPress={() => navigation.navigate('CreateChurch')}
+            >
+              Create
+            </SecondaryButton>
+            <SecondaryButton
+              size="sm"
+              icon={<Plus size={16} color="#6B4F3E" />}
               onPress={() => navigation.navigate('JoinChurch')}
             >
-              Join Church
+              Join
             </SecondaryButton>
           </View>
 
@@ -201,6 +215,7 @@ const styles = StyleSheet.create({
   headerActions: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
+    gap: 10,
     marginBottom: 16,
   },
   churchList: {

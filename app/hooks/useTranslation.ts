@@ -171,18 +171,13 @@ export function useUserLanguagePreference() {
   ) => {
     if (!currentUser) return;
 
-    try {
-      await translationService.setUserLanguagePreference({
-        userId: currentUser.id,
-        preferredLanguage,
-        autoTranslate,
-        fallbackLanguage: 'en',
-      });
-      setPreference({ preferredLanguage, autoTranslate });
-    } catch (error) {
-      console.error('Failed to update language preference:', error);
-      throw error;
-    }
+    await translationService.setUserLanguagePreference({
+      userId: currentUser.id,
+      preferredLanguage,
+      autoTranslate,
+      fallbackLanguage: 'en',
+    });
+    setPreference({ preferredLanguage, autoTranslate });
   }, [currentUser]);
 
   return { preference, isLoading, updatePreference };

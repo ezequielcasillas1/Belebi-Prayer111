@@ -159,6 +159,15 @@ export default function CreateRequestScreen() {
             <Text style={styles.sectionHint}>
               For urgent situations that may benefit from visual context
             </Text>
+            <Text style={styles.exampleText}>
+              Examples: hospital stays, car troubles, home damage, medical documents, or physical ailments you'd like prayed over
+            </Text>
+            <Text style={styles.warningText}>
+              No graphic images (blood, gore, or visible injuries). Hospital photos are welcome if wounds are covered.
+            </Text>
+            <Text style={styles.moderationText}>
+              Photos are automatically reviewed. Content violating guidelines will be removed.
+            </Text>
             <View style={styles.imageGrid}>
               {emergencyImages.map((img, index) => (
                 <View key={index} style={styles.imageContainer}>
@@ -353,6 +362,24 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#7A5000',
+  },
+  exampleText: {
+    fontSize: 12,
+    color: '#8B7355',
+    marginBottom: 6,
+    lineHeight: 18,
+  },
+  warningText: {
+    fontSize: 12,
+    color: '#996600',
+    marginBottom: 6,
+    lineHeight: 18,
+  },
+  moderationText: {
+    fontSize: 11,
+    color: '#7A5000',
+    fontStyle: 'italic',
+    marginBottom: 12,
   },
   optionsRow: {
     flexDirection: 'row',

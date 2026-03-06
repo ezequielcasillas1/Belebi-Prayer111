@@ -7,6 +7,7 @@ import AppHeader from '../../../components/AppHeader';
 import ImageCarousel from '../../../components/ImageCarousel';
 import ReportModal from '../../../components/ReportModal';
 import Badge from '../../../components/Badge';
+import TranslatedText from '../../../components/TranslatedText';
 import { PrimaryButton, SecondaryButton, GhostButton, IconButton } from '../../../components/Buttons';
 import { usePrayerStore } from '../stores/prayerStore';
 import { usePlanStore } from '../../planning/stores/planStore';
@@ -142,9 +143,25 @@ export default function PrayerProfileScreen() {
 
           <View style={styles.requestSection}>
             <Text style={styles.sectionTitle}>Prayer Request</Text>
-            <Text style={styles.requestText}>"{request.requestText}"</Text>
+            <View style={styles.requestTextContainer}>
+              <Text style={styles.quoteOpen}>"</Text>
+              <TranslatedText
+                text={request.requestText}
+                contentId={request.id}
+                style={styles.requestTextInner}
+                showOriginalToggle={true}
+                forceTranslate={true}
+              />
+              <Text style={styles.quoteClose}>"</Text>
+            </View>
             {request.description && (
-              <Text style={styles.descriptionText}>{request.description}</Text>
+              <TranslatedText
+                text={request.description}
+                contentId={`${request.id}-desc`}
+                style={styles.descriptionText}
+                showOriginalToggle={false}
+                forceTranslate={true}
+              />
             )}
           </View>
 
@@ -324,12 +341,27 @@ const styles = StyleSheet.create({
     color: '#1C0F0A',
     marginBottom: 12,
   },
-  requestText: {
+  requestTextContainer: {
+    marginBottom: 12,
+  },
+  requestTextInner: {
     fontSize: 16,
     color: '#5C3D2E',
     fontStyle: 'italic',
     lineHeight: 24,
-    marginBottom: 12,
+  },
+  quoteOpen: {
+    fontSize: 24,
+    color: '#5C3D2E',
+    fontStyle: 'italic',
+    lineHeight: 24,
+  },
+  quoteClose: {
+    fontSize: 24,
+    color: '#5C3D2E',
+    fontStyle: 'italic',
+    lineHeight: 24,
+    alignSelf: 'flex-end',
   },
   descriptionText: {
     fontSize: 14,

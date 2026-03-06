@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TextInput, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Church, CheckCircle, AlertTriangle } from 'lucide-react-native';
+import { Church, CheckCircle } from 'lucide-react-native';
 import AppHeader from '../../../components/AppHeader';
 import { PrimaryButton, SecondaryButton } from '../../../components/Buttons';
 import { useAuthStore } from '../../auth/stores/authStore';
@@ -23,8 +23,6 @@ export default function CreateChurchScreen() {
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const isVerifiedLeader = false;
-
   const userId = supabaseProfile?.id || currentUser?.id;
 
   const handleCreate = async () => {
@@ -42,32 +40,6 @@ export default function CreateChurchScreen() {
       setIsCreating(false);
     }
   };
-
-  if (!isVerifiedLeader) {
-    return (
-      <View style={styles.container}>
-        <AppHeader title="Create Church" showBack />
-        <View style={styles.notVerifiedState}>
-          <View style={styles.warningIcon}>
-            <AlertTriangle size={40} color="#7A5000" />
-          </View>
-          <Text style={styles.notVerifiedTitle}>Verification Required</Text>
-          <Text style={styles.notVerifiedText}>
-            Only verified church leaders can create church communities. This helps ensure authentic church representation.
-          </Text>
-          <View style={styles.infoCard}>
-            <Text style={styles.infoTitle}>How to become verified:</Text>
-            <Text style={styles.infoText}>1. Contact Belebi Prayer support</Text>
-            <Text style={styles.infoText}>2. Provide church documentation</Text>
-            <Text style={styles.infoText}>3. Verification typically takes 2-3 days</Text>
-          </View>
-          <SecondaryButton fullWidth onPress={() => navigation.goBack()}>
-            Go Back
-          </SecondaryButton>
-        </View>
-      </View>
-    );
-  }
 
   return (
     <View style={styles.container}>
@@ -173,35 +145,6 @@ const styles = StyleSheet.create({
   content: {
     padding: 24,
   },
-  notVerifiedState: {
-    flex: 1,
-    padding: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  warningIcon: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#FFF8E7',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 24,
-  },
-  notVerifiedTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#1C0F0A',
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  notVerifiedText: {
-    fontSize: 15,
-    color: '#5C3D2E',
-    textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: 24,
-  },
   iconContainer: {
     alignItems: 'center',
     marginBottom: 20,
@@ -306,24 +249,6 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   noteText: {
-    fontSize: 13,
-    color: '#5C3D2E',
-    lineHeight: 20,
-  },
-  infoCard: {
-    padding: 16,
-    backgroundColor: 'rgba(107, 79, 62, 0.06)',
-    borderRadius: 14,
-    marginBottom: 24,
-    alignSelf: 'stretch',
-  },
-  infoTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1C0F0A',
-    marginBottom: 10,
-  },
-  infoText: {
     fontSize: 13,
     color: '#5C3D2E',
     lineHeight: 20,

@@ -11,7 +11,7 @@ import { WelcomeScreen, SetupScreen, VerifyScreen } from '../features/auth';
 import { HomeScreen, PrayerListScreen, PrayerProfileScreen, PrayersSentScreen, CreateRequestScreen } from '../features/prayers';
 import { DirectoryScreen, PrayForNationScreen, CountryDetailScreen, LivePrayerRoomScreen } from '../features/nations';
 import { AutoModeScreen, PlanPrayerScreen } from '../features/planning';
-import { SettingsScreen, HelpSafetyScreen } from '../features/settings';
+import { SettingsScreen, HelpSafetyScreen, TranslationTestScreen } from '../features/settings';
 import { ChurchListScreen, ChurchDetailScreen, JoinChurchScreen, CreateChurchScreen, ChurchSettingsScreen } from '../features/churches';
 
 export type RootStackParamList = {
@@ -30,6 +30,7 @@ export type RootStackParamList = {
   JoinChurch: undefined;
   CreateChurch: undefined;
   ChurchSettings: { churchId: string };
+  TranslationTest: undefined;
 };
 
 export type DrawerParamList = {
@@ -104,6 +105,7 @@ export default function RootNavigator() {
             <Stack.Screen name="JoinChurch" component={JoinChurchScreen} />
             <Stack.Screen name="CreateChurch" component={CreateChurchScreen} />
             <Stack.Screen name="ChurchSettings" component={ChurchSettingsScreen} />
+            <Stack.Screen name="TranslationTest" component={TranslationTestScreen} />
           </>
         )}
       </Stack.Navigator>

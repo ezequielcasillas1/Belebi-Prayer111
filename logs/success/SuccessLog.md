@@ -1,5 +1,16 @@
 # Success Log
 
+### 2026-03-05 - Emergency Photo Guidance
+**Status:** SUCCESS ✅
+**Files:** CreateRequestScreen.tsx
+**Result:** Added emergency photo guidance with examples (hospital, car/house problems, medical docs), content restrictions (no graphic images), and API moderation notice.
+
+### 2026-03-02 - Supabase Edge + Auth/UI
+**Status:** SUCCESS ✅
+**Commit:** 1b7e3a3
+**Files:** App.tsx, supabase.ts, AppProviders.tsx, SetupScreen.tsx, VerifyScreen.tsx, WelcomeScreen.tsx, HomeScreen.tsx, WorldMap.tsx, CountryActionModal.tsx, countries.ts, ErrorBoundary.tsx, translate/index.ts, app.config.js, .env.example
+**Result:** Added Supabase Edge translate function. Enhanced auth screens and providers. Updated WorldMap/CountryActionModal. Added ErrorBoundary component.
+
 ### 2026-03-02 - Production-Ready World Map
 **Status:** SUCCESS ✅
 **Files:** countries.ts, HomeScreen.tsx

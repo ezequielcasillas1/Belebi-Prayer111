@@ -19,6 +19,7 @@ import {
 import { detectLanguage, needsTranslation } from './languageDetector';
 
 const CACHE_KEY_PREFIX = 'translation_cache_';
+const PREF_KEY_PREFIX = 'language_pref_';
 const CACHE_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 const MAX_CACHE_ENTRIES = 500;
 
@@ -119,8 +120,18 @@ class TranslationService {
   async translate(request: TranslationRequest): Promise<TranslationResult> {
     await this.initialize();
 
-    const sourceLanguage = request.sourceLanguage || 
-      (await this.detectLanguage(request.text)).detectedLanguage.code;
+    const detectionResult = await this.detectLanguage(request.text);
+    const sourceLanguage = request.sourceLanguage || detectionResult.detectedLanguage.code;
+
+    // #region agent log
+    console.log('[DEBUG-d634a8] translate:', JSON.stringify({
+      textPreview: request.text.substring(0, 30),
+      detectedLang: sourceLanguage,
+      targetLang: request.targetLanguage,
+      needsTranslation: needsTranslation(sourceLanguage, request.targetLanguage),
+      confidence: detectionResult.detectedLanguage.confidence
+    }));
+    // #endregion
 
     if (!needsTranslation(sourceLanguage, request.targetLanguage)) {
       return {
@@ -273,6 +284,17 @@ class TranslationService {
   }
 
   async getUserLanguagePreference(userId: string): Promise<UserLanguagePreference | null> {
+    // Check local storage first (faster, works offline)
+    try {
+      const localData = await AsyncStorage.getItem(`${PREF_KEY_PREFIX}${userId}`);
+      if (localData) {
+        return JSON.parse(localData) as UserLanguagePreference;
+      }
+    } catch {
+      // Local storage failed, try Supabase
+    }
+
+    // Try Supabase as backup
     try {
       const { data } = await supabase
         .from('user_language_preferences')
@@ -281,20 +303,34 @@ class TranslationService {
         .single();
 
       if (data) {
-        return {
+        const pref: UserLanguagePreference = {
           userId: data.user_id,
           preferredLanguage: data.preferred_language,
           autoTranslate: data.auto_translate,
           fallbackLanguage: data.fallback_language || 'en',
         };
+        // Cache locally for next time
+        await AsyncStorage.setItem(`${PREF_KEY_PREFIX}${userId}`, JSON.stringify(pref));
+        return pref;
       }
     } catch {
-      // No preference found
+      // Supabase failed too
     }
     return null;
   }
 
   async setUserLanguagePreference(preference: UserLanguagePreference): Promise<void> {
+    // Always save to local storage first (instant, works offline)
+    try {
+      await AsyncStorage.setItem(
+        `${PREF_KEY_PREFIX}${preference.userId}`,
+        JSON.stringify(preference)
+      );
+    } catch (localError) {
+      console.error('Failed to save preference locally:', localError);
+    }
+
+    // Try to sync to Supabase (may fail if table doesn't exist)
     try {
       const { error } = await supabase
         .from('user_language_preferences')
@@ -308,10 +344,11 @@ class TranslationService {
           onConflict: 'user_id',
         });
 
-      if (error) throw error;
+      if (error) {
+        console.warn('Supabase sync failed (using local storage):', error.message);
+      }
     } catch (error) {
-      console.error('Failed to set user language preference:', error);
-      throw error;
+      console.warn('Supabase sync failed (using local storage):', error);
     }
   }
 
