@@ -68,6 +68,14 @@ class TranslationService {
         
         try {
           const entry: TranslationCacheEntry = JSON.parse(value);
+          
+          // Skip and remove bad cache entries where translation failed (same as original)
+          const isBadCache = entry.translatedText === entry.originalText;
+          if (isBadCache) {
+            await AsyncStorage.removeItem(key);
+            continue;
+          }
+          
           if (entry.expiresAt > now) {
             this.cache.set(entry.key, entry);
           } else {
@@ -123,16 +131,6 @@ class TranslationService {
     const detectionResult = await this.detectLanguage(request.text);
     const sourceLanguage = request.sourceLanguage || detectionResult.detectedLanguage.code;
 
-    // #region agent log
-    console.log('[DEBUG-d634a8] translate:', JSON.stringify({
-      textPreview: request.text.substring(0, 30),
-      detectedLang: sourceLanguage,
-      targetLang: request.targetLanguage,
-      needsTranslation: needsTranslation(sourceLanguage, request.targetLanguage),
-      confidence: detectionResult.detectedLanguage.confidence
-    }));
-    // #endregion
-
     if (!needsTranslation(sourceLanguage, request.targetLanguage)) {
       return {
         originalText: request.text,
@@ -148,14 +146,22 @@ class TranslationService {
     const cachedEntry = this.cache.get(cacheKey);
     
     if (cachedEntry && cachedEntry.expiresAt > Date.now()) {
-      return {
-        originalText: cachedEntry.originalText,
-        translatedText: cachedEntry.translatedText,
-        sourceLanguage: cachedEntry.sourceLanguage,
-        targetLanguage: cachedEntry.targetLanguage,
-        confidence: 1,
-        cached: true,
-      };
+      const isBadCache = cachedEntry.translatedText === cachedEntry.originalText;
+      
+      // Don't return bad cache entries where translation failed (same as original)
+      if (!isBadCache) {
+        return {
+          originalText: cachedEntry.originalText,
+          translatedText: cachedEntry.translatedText,
+          sourceLanguage: cachedEntry.sourceLanguage,
+          targetLanguage: cachedEntry.targetLanguage,
+          confidence: 1,
+          cached: true,
+        };
+      }
+      // Bad cache - invalidate and continue to provider
+      this.cache.delete(cacheKey);
+      AsyncStorage.removeItem(`${CACHE_KEY_PREFIX}${cacheKey}`).catch(() => {});
     }
 
     if (this.provider) {
@@ -165,15 +171,20 @@ class TranslationService {
           sourceLanguage,
         });
 
-        await this.saveCacheEntry({
-          key: cacheKey,
-          originalText: request.text,
-          translatedText: result.translatedText,
-          sourceLanguage,
-          targetLanguage: request.targetLanguage,
-          timestamp: Date.now(),
-          expiresAt: Date.now() + CACHE_EXPIRY_MS,
-        });
+        const translationFailed = result.translatedText === request.text;
+
+        // Only cache successful translations (translated text differs from original)
+        if (!translationFailed) {
+          await this.saveCacheEntry({
+            key: cacheKey,
+            originalText: request.text,
+            translatedText: result.translatedText,
+            sourceLanguage,
+            targetLanguage: request.targetLanguage,
+            timestamp: Date.now(),
+            expiresAt: Date.now() + CACHE_EXPIRY_MS,
+          });
+        }
 
         return result;
       } catch (error) {

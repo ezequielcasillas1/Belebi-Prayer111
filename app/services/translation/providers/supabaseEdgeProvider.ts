@@ -40,37 +40,45 @@ export class SupabaseEdgeTranslationProvider implements TranslationProvider {
   }
 
   async translate(request: TranslationRequest): Promise<TranslationResult> {
-    try {
-      const { data, error } = await supabase.functions.invoke('translate', {
-        body: {
-          text: request.text,
-          sourceLanguage: request.sourceLanguage,
+    const maxRetries = 2;
+
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        if (attempt > 0) {
+          await new Promise(resolve => setTimeout(resolve, 500 * attempt));
+        }
+
+        const { data, error } = await supabase.functions.invoke('translate', {
+          body: {
+            text: request.text,
+            sourceLanguage: request.sourceLanguage,
+            targetLanguage: request.targetLanguage,
+          },
+        });
+
+        if (error) throw error;
+
+        return {
+          originalText: request.text,
+          translatedText: data.translatedText,
+          sourceLanguage: data.sourceLanguage || request.sourceLanguage!,
           targetLanguage: request.targetLanguage,
-        },
-      });
-
-      if (error) throw error;
-
-      return {
-        originalText: request.text,
-        translatedText: data.translatedText,
-        sourceLanguage: data.sourceLanguage || request.sourceLanguage!,
-        targetLanguage: request.targetLanguage,
-        confidence: data.confidence || 0.95,
-        cached: false,
-      };
-    } catch (error) {
-      console.error('Supabase Edge translation error:', error);
-      
-      return {
-        originalText: request.text,
-        translatedText: request.text,
-        sourceLanguage: request.sourceLanguage || 'en',
-        targetLanguage: request.targetLanguage,
-        confidence: 0,
-        cached: false,
-      };
+          confidence: data.confidence || 0.95,
+          cached: false,
+        };
+      } catch (error) {
+        if (attempt === maxRetries) break;
+      }
     }
+    
+    return {
+      originalText: request.text,
+      translatedText: request.text,
+      sourceLanguage: request.sourceLanguage || 'en',
+      targetLanguage: request.targetLanguage,
+      confidence: 0,
+      cached: false,
+    };
   }
 
   async getSupportedLanguages(): Promise<LanguageCode[]> {

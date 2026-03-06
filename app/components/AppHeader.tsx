@@ -42,26 +42,14 @@ export default function AppHeader({
     if (onMenuPress) {
       onMenuPress();
     } else {
-      // #region agent log
-      fetch('http://127.0.0.1:7300/ingest/57385e69-e00c-43a4-8874-7310b7792ce9',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'d1ade8'},body:JSON.stringify({sessionId:'d1ade8',runId:'fix-universal-menu',hypothesisId:'H6',location:'AppHeader.tsx:handleMenu',message:'universal menu handler - dispatching openDrawer',data:{hasCustomHandler:false},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
       navigation.dispatch(DrawerActions.openDrawer());
     }
   };
 
   const handleSettings = () => {
     if (onSettingsPress) {
-      // #region agent log
-      fetch('http://127.0.0.1:7300/ingest/57385e69-e00c-43a4-8874-7310b7792ce9',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'d1ade8'},body:JSON.stringify({sessionId:'d1ade8',runId:'drawer-open-pre',hypothesisId:'H2',location:'AppHeader.tsx:44',message:'using custom onSettingsPress handler',data:{hasOnSettingsPress:true},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
       onSettingsPress();
     } else {
-      // @ts-ignore - navigation typing
-      const navAny = navigation as any;
-      const currentState = navAny?.getState?.();
-      // #region agent log
-      fetch('http://127.0.0.1:7300/ingest/57385e69-e00c-43a4-8874-7310b7792ce9',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'d1ade8'},body:JSON.stringify({sessionId:'d1ade8',runId:'drawer-open-pre',hypothesisId:'H3',location:'AppHeader.tsx:51',message:'default settings navigation',data:{target:'Settings',currentType:currentState?.type,currentRouteNames:currentState?.routeNames},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
       (navigation as any).navigate('SettingsDrawer');
     }
   };

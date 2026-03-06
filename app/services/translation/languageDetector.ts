@@ -14,10 +14,9 @@ const LANGUAGE_PATTERNS: Record<string, RegExp[]> = {
   ko: [/[\uAC00-\uD7AF]/g, /[\u1100-\u11FF]/g],
   th: [/[\u0E00-\u0E7F]/g],
   hi: [/[\u0900-\u097F]/g],
-  // Note: ru and uk handled specially below due to shared Cyrillic
   el: [/[\u0370-\u03FF]/g],
   vi: [/[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/gi],
-  pl: [/[ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]/g], // Polish diacritics
+  pl: [/[ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]/g],
   fa: [/[\u0600-\u06FF]/g],
 };
 
@@ -28,7 +27,7 @@ const LANGUAGE_WORDS: Record<string, string[]> = {
   it: ['il', 'di', 'che', 'e', 'la', 'per', 'un', 'in', 'sono', 'del', 'preghiera', 'signore', 'dio', 'grazie', 'benedizione', 'amen'],
   pt: ['o', 'de', 'que', 'e', 'do', 'da', 'em', 'um', 'para', 'é', 'com', 'oração', 'senhor', 'deus', 'obrigado', 'bênção', 'amém'],
   nl: ['de', 'het', 'een', 'van', 'en', 'in', 'is', 'op', 'te', 'dat', 'gebed', 'heer', 'god', 'dank', 'zegen', 'amen'],
-  pl: ['i', 'w', 'nie', 'na', 'do', 'to', 'że', 'się', 'z', 'co', 'za', 'o', 'jest', 'jak', 'ale', 'czy', 'tak', 'już', 'tylko', 'może', 'bardzo', 'proszę', 'modlitwa', 'modlitwę', 'rodzinę', 'rodzina', 'potrzebujemy', 'pan', 'bóg', 'bożego', 'dziękuję', 'błogosławieństwo', 'błogosławieństwa', 'amen'],
+  pl: ['i', 'w', 'nie', 'na', 'do', 'to', 'że', 'się', 'z', 'co', 'za', 'o', 'jest', 'jak', 'ale', 'czy', 'tak', 'już', 'tylko', 'może', 'bardzo', 'proszę', 'modlitwa', 'modlitwę', 'rodzinę', 'rodzina', 'rodziny', 'moją', 'mojej', 'mój', 'potrzebujemy', 'potrzebuje', 'przechodzimy', 'trudny', 'trudne', 'czas', 'czasu', 'pan', 'pana', 'bóg', 'boga', 'bożego', 'boże', 'dziękuję', 'dzięki', 'błogosławieństwo', 'błogosławieństwa', 'amen', 'który', 'która', 'które', 'przez', 'przy', 'dla', 'od', 'po', 'też', 'mnie', 'nas', 'was', 'ich', 'jej', 'jego', 'nasz', 'nasza', 'nasze', 'wasz', 'wasza', 'wasze'],
   sv: ['och', 'att', 'det', 'som', 'på', 'är', 'av', 'för', 'bön', 'herre', 'gud', 'tack', 'välsignelse', 'amen', 'jag', 'inte', 'med', 'har', 'var'],
   da: ['og', 'at', 'er', 'det', 'på', 'af', 'til', 'bøn', 'herre', 'gud', 'tak', 'velsignelse', 'amen', 'jeg', 'ikke', 'med', 'har', 'var', 'hvad'],
   no: ['og', 'er', 'det', 'på', 'å', 'som', 'til', 'av', 'bønn', 'herre', 'gud', 'takk', 'velsignelse', 'amen', 'jeg', 'ikke', 'med', 'har', 'hva'],
@@ -47,23 +46,7 @@ const LANGUAGE_WORDS: Record<string, string[]> = {
 export function detectLanguageByScript(text: string): DetectedLanguage | null {
   const textWithoutSpaces = text.replace(/\s/g, '');
   
-  // #region agent log
-  const fc = text.charCodeAt(0);
-  const isKorean = fc >= 0xAC00 && fc <= 0xD7AF;
-  const isArabic = fc >= 0x0600 && fc <= 0x06FF;
-  const isThai = fc >= 0x0E00 && fc <= 0x0E7F;
-  const isGreek = fc >= 0x0370 && fc <= 0x03FF;
-  const isHebrew = fc >= 0x0590 && fc <= 0x05FF;
-  const isHindi = fc >= 0x0900 && fc <= 0x097F;
-  console.log('[DEBUG-d634a8] scriptByChar:', JSON.stringify({
-    charCode: fc,
-    ko: isKorean, ar: isArabic, th: isThai, el: isGreek, he: isHebrew, hi: isHindi
-  }));
-  // #endregion
-  
   // Special handling for Japanese: check for Hiragana/Katakana presence
-  // Japanese uses Kanji (shared with Chinese) + Hiragana/Katakana
-  // If we find ANY Hiragana or Katakana, it's Japanese (not Chinese)
   const hiraganaPattern = /[\u3040-\u309F]/g;
   const katakanaPattern = /[\u30A0-\u30FF]/g;
   const kanjiPattern = /[\u4E00-\u9FFF]/g;
@@ -72,7 +55,7 @@ export function detectLanguageByScript(text: string): DetectedLanguage | null {
   const katakanaMatches = text.match(katakanaPattern) || [];
   const kanjiMatches = text.match(kanjiPattern) || [];
   
-  // If text has Hiragana or Katakana, it's Japanese (these are unique to Japanese)
+  // If text has Hiragana or Katakana, it's Japanese
   if (hiraganaMatches.length > 0 || katakanaMatches.length > 0) {
     const japaneseCoverage = (hiraganaMatches.length + katakanaMatches.length + kanjiMatches.length) / textWithoutSpaces.length;
     if (japaneseCoverage > 0.3) {
@@ -99,22 +82,18 @@ export function detectLanguageByScript(text: string): DetectedLanguage | null {
   }
 
   // Special handling for Cyrillic languages (Russian vs Ukrainian)
-  // Ukrainian unique: і, ї, є, ґ (U+0456, U+0457, U+0454, U+0491)
-  // Russian unique: ё, ы, э, ъ (U+0451, U+044B, U+044D, U+044A)
   const cyrillicPattern = /[\u0400-\u04FF]/g;
   const cyrillicMatches = text.match(cyrillicPattern) || [];
   if (cyrillicMatches.length > 0) {
     const cyrillicCoverage = cyrillicMatches.length / textWithoutSpaces.length;
     if (cyrillicCoverage > 0.3) {
-      // Check for Ukrainian-specific characters
       const ukrainianChars = /[іїєґІЇЄҐ]/g;
       const ukrainianMatches = text.match(ukrainianChars) || [];
       
-      // Check for Russian-specific characters
       const russianChars = /[ёыэъЁЫЭЪ]/g;
       const russianMatches = text.match(russianChars) || [];
       
-      let langCode: LanguageCode = 'ru'; // Default to Russian
+      let langCode: LanguageCode = 'ru';
       let langName = 'Russian';
       
       if (ukrainianMatches.length > russianMatches.length) {
@@ -134,12 +113,7 @@ export function detectLanguageByScript(text: string): DetectedLanguage | null {
     }
   }
 
-  // #region agent log
-  const debugMatches: { lang: string, coverage: number, matchLen: number, textLen: number }[] = [];
-  // #endregion
-  
   for (const [langCode, patterns] of Object.entries(LANGUAGE_PATTERNS)) {
-    // Skip ja, zh as we handled them above, and skip cyrillic languages (handled above)
     if (langCode === 'ja' || langCode === 'zh') continue;
     
     for (const pattern of patterns) {
@@ -148,26 +122,20 @@ export function detectLanguageByScript(text: string): DetectedLanguage | null {
         const matchLen = matches.join('').length;
         const coverage = matchLen / textWithoutSpaces.length;
         
-        // #region agent log
-        debugMatches.push({ lang: langCode, coverage, matchLen, textLen: textWithoutSpaces.length });
-        // #endregion
-        
-        // Lower threshold for diacritic languages: Polish (0.05), Vietnamese (0.15), others (0.3)
         const threshold = langCode === 'pl' ? 0.05 : (langCode === 'vi' ? 0.15 : 0.3);
         if (coverage > threshold) {
           const language = SUPPORTED_LANGUAGES.find(l => getBaseLanguageCode(l.code) === langCode);
           
-          // #region agent log
-          console.log('[DEBUG-d634a8] scriptDetect MATCH:', JSON.stringify({
-            lang: langCode,
-            coverage: coverage.toFixed(2),
-            threshold
-          }));
-          // #endregion
+          let confidence: number;
+          if (langCode === 'pl') {
+            confidence = Math.min(0.6 + (coverage * 2), 0.95);
+          } else {
+            confidence = Math.min(coverage * 1.2, 0.98);
+          }
           
           return {
             code: (langCode as LanguageCode),
-            confidence: Math.min(coverage * 1.2, 0.98),
+            confidence,
             name: language?.name || langCode,
           };
         }
@@ -175,17 +143,11 @@ export function detectLanguageByScript(text: string): DetectedLanguage | null {
     }
   }
   
-  // #region agent log
-  if (debugMatches.length > 0) {
-    console.log('[DEBUG-d634a8] scriptDetect NO_MATCH (coverage too low):', JSON.stringify(debugMatches));
-  }
-  // #endregion
-  
   return null;
 }
 
 export function detectLanguageByWords(text: string): DetectedLanguage | null {
-  const words = text.toLowerCase().split(/\s+/);
+  const words = text.toLowerCase().split(/\s+/).map(w => w.replace(/[.,!?;:'"()[\]{}]/g, ''));
   const scores: Record<string, number> = {};
   
   for (const [langCode, langWords] of Object.entries(LANGUAGE_WORDS)) {
@@ -229,15 +191,6 @@ export function detectLanguage(text: string): LanguageDetectionResult {
   
   const scriptDetection = detectLanguageByScript(normalizedText);
   
-  // #region agent log
-  const firstChar = normalizedText.charCodeAt(0);
-  console.log('[DEBUG-d634a8] detectLanguage:', JSON.stringify({
-    textPreview: normalizedText.substring(0, 20),
-    firstCharCode: firstChar,
-    scriptResult: scriptDetection ? { code: scriptDetection.code, conf: scriptDetection.confidence.toFixed(2) } : 'NULL'
-  }));
-  // #endregion
-  
   if (scriptDetection && scriptDetection.confidence > 0.5) {
     return {
       detectedLanguage: scriptDetection,
@@ -247,6 +200,7 @@ export function detectLanguage(text: string): LanguageDetectionResult {
   }
   
   const wordDetection = detectLanguageByWords(normalizedText);
+  
   if (wordDetection) {
     const alternatives: DetectedLanguage[] = [];
     
