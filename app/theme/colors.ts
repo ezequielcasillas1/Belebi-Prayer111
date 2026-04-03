@@ -84,6 +84,8 @@ export const colors = {
     blue: '#3B82F6',
     purple: '#8B5CF6',
     teal: '#14B8A6',
+    orange: '#F97316',
+    green: '#22C55E',
   },
 };
 

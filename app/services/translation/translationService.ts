@@ -341,8 +341,15 @@ class TranslationService {
       console.error('Failed to save preference locally:', localError);
     }
 
-    // Try to sync to Supabase (may fail if table doesn't exist)
+    // Only sync to Supabase if there's an active session with matching user
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      // Skip sync if no active session or user ID mismatch
+      if (!session?.user?.id || session.user.id !== preference.userId) {
+        return;
+      }
+
       const { error } = await supabase
         .from('user_language_preferences')
         .upsert({

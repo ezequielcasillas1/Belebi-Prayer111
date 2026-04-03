@@ -13,6 +13,7 @@ import { DirectoryScreen, PrayForNationScreen, CountryDetailScreen, LivePrayerRo
 import { AutoModeScreen, PlanPrayerScreen } from '../features/planning';
 import { SettingsScreen, HelpSafetyScreen, TranslationTestScreen } from '../features/settings';
 import { ChurchListScreen, ChurchDetailScreen, JoinChurchScreen, CreateChurchScreen, ChurchSettingsScreen } from '../features/churches';
+import { ProfileScreen, TestimoniesScreen } from '../features/profile';
 
 export type RootStackParamList = {
   Welcome: undefined;
@@ -35,6 +36,8 @@ export type RootStackParamList = {
 
 export type DrawerParamList = {
   HomeDrawer: undefined;
+  ProfileDrawer: undefined;
+  TestimoniesDrawer: undefined;
   PrayerListDrawer: undefined;
   PlanPrayerDrawer: undefined;
   PrayersSentDrawer: undefined;
@@ -60,6 +63,8 @@ function MainDrawer() {
       }}
     >
       <Drawer.Screen name="HomeDrawer" component={HomeScreen} />
+      <Drawer.Screen name="ProfileDrawer" component={ProfileScreen} />
+      <Drawer.Screen name="TestimoniesDrawer" component={TestimoniesScreen} />
       <Drawer.Screen name="PrayerListDrawer" component={PrayerListScreen} />
       <Drawer.Screen name="PlanPrayerDrawer" component={PlanPrayerScreen} />
       <Drawer.Screen name="PrayersSentDrawer" component={PrayersSentScreen} />

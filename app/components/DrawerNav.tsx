@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { DrawerContentComponentProps } from '@react-navigation/drawer';
 import { useNavigation } from '@react-navigation/native';
-import { Home, Users, BookmarkPlus, Send, PlusCircle, Settings, HelpCircle, LogOut, User, Church } from 'lucide-react-native';
+import { Home, Users, BookmarkPlus, Send, PlusCircle, Settings, HelpCircle, LogOut, User, Church, Heart } from 'lucide-react-native';
 import { useAuthStore } from '../features/auth/stores/authStore';
 import { usePlanStore } from '../features/planning/stores/planStore';
 import Badge from './Badge';
@@ -14,6 +14,7 @@ const navItems = [
   { key: 'PrayerListDrawer', label: 'Prayer List', icon: Users },
   { key: 'PlanPrayerDrawer', label: 'Plan Prayer', icon: BookmarkPlus },
   { key: 'PrayersSentDrawer', label: 'Prayers Sent', icon: Send },
+  { key: 'TestimoniesDrawer', label: 'Testimonies', icon: Heart },
   { key: 'CreateRequestDrawer', label: 'Ask for Prayer', icon: PlusCircle },
   { key: 'ChurchList', label: 'My Churches', icon: Church, isStackScreen: true },
   { key: 'SettingsDrawer', label: 'Settings', icon: Settings },
@@ -56,7 +57,11 @@ export default function DrawerNav(props: DrawerContentComponentProps) {
           </View>
         </View>
 
-        <View style={styles.userInfo}>
+        <TouchableOpacity 
+          style={styles.userInfo}
+          onPress={() => handleNavigation('ProfileDrawer')}
+          activeOpacity={0.7}
+        >
           <View style={styles.userAvatar}>
             <Text style={styles.userFlag}>{currentUser?.flag || '🌍'}</Text>
           </View>
@@ -67,7 +72,8 @@ export default function DrawerNav(props: DrawerContentComponentProps) {
             </View>
             <Text style={styles.userCountry}>{currentUser?.country || 'Worldwide'}</Text>
           </View>
-        </View>
+          <User size={18} color={colors.text.muted} />
+        </TouchableOpacity>
 
         <View style={styles.modeIndicator}>
           <View

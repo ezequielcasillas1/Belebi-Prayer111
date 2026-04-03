@@ -123,6 +123,47 @@ export interface Database {
           prayer_text?: string;
         };
       };
+      answered_prayers: {
+        Row: {
+          id: string;
+          user_id: string;
+          prayer_request_id: string | null;
+          testimony_text: string;
+          is_public: boolean;
+          answered_at: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          prayer_request_id?: string | null;
+          testimony_text: string;
+          is_public?: boolean;
+          answered_at?: string;
+          created_at?: string;
+        };
+        Update: {
+          testimony_text?: string;
+          is_public?: boolean;
+        };
+      };
+      user_milestones: {
+        Row: {
+          id: string;
+          user_id: string;
+          milestone_key: string;
+          achieved_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          milestone_key: string;
+          achieved_at?: string;
+        };
+        Update: {
+          milestone_key?: string;
+        };
+      };
     };
     Views: {};
     Functions: {};
@@ -147,3 +188,37 @@ export interface ChurchPrayerWithAuthor extends ChurchPrayer {
   };
   responses_count: number;
 }
+
+export interface AnsweredPrayer {
+  id: string;
+  user_id: string;
+  prayer_request_id: string | null;
+  testimony_text: string;
+  is_public: boolean;
+  answered_at: string;
+  created_at: string;
+}
+
+export interface PublicTestimony extends AnsweredPrayer {
+  author: {
+    first_name: string;
+    flag: string;
+  };
+}
+
+export interface UserMilestone {
+  id: string;
+  user_id: string;
+  milestone_key: string;
+  achieved_at: string;
+}
+
+export type MilestoneKey = 
+  | 'faithful_intercessor'    // First 10 prayers
+  | 'steadfast_in_prayer'     // 7-day streak
+  | 'nations_advocate'        // Prayed for 10+ countries
+  | 'church_pillar'           // Active in 3+ church groups
+  | 'emergency_responder'     // Prayed for emergency requests
+  | 'prayer_warrior'          // 50 prayers sent
+  | 'intercessor_100'         // 100 prayers sent
+  | 'daily_devoted';          // 30-day streak

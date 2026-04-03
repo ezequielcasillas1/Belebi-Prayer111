@@ -1,5 +1,9 @@
 {
   "expo": {
+    "name": "Belebi Prayer",
+    "slug": "belebi-prayer",
+    "version": "1.0.0",
+    "owner": "casiezeq",
     "userInterfaceStyle": "automatic",
     "extra": {
       "eas": {
